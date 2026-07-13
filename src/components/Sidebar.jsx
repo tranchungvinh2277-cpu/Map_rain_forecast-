@@ -60,7 +60,7 @@ function Sidebar({
 
       <div style={sidebarStyle}>
         <h2 style={{ textAlign: "center", margin: 0, color: "#003366" }}>
-          BẢN ĐỒ MÔ HÌNH MƯA DỰ BÁO - 5 NGÀY
+          BẢN ĐỒ MƯA DỰ BÁO - 5 NGÀY
         </h2>
 
         {forecastTime.start && forecastTime.end && (
