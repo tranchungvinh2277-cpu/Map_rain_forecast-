@@ -1,0 +1,232 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.label-tooltip {
+  color: red !important;
+  font-weight: bold;
+  font-size: 12px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 0 !important;
+}
+.geojson-label {
+  color: red !important;
+  font-weight: bold;
+  font-size: 12px;
+  background: transparent !important;
+  border: none !important;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: none !important;
+}
+
+.geojson-label-tam {
+  color: Red !important;
+  font-weight: bold;
+  font-size: 10px;
+  background: transparent !important;
+  border: none !important;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tram-label span {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  display: inline-block;
+  transform: translateX(10px);
+}
+.file-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.file-button {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+}
+
+.file-button input {
+  display: none;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 1rem;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-item label {
+  font-weight: bold;
+}
+
+.filter-item select {
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+/* Bảng danh sách trạm */
+.station-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.station-table th, .station-table td {
+  border: 1px solid #ddd;
+  text-align: center;
+  padding: 6px 8px;
+}
+
+.station-table th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.station-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.station-table tr:hover {
+  background-color: #ddd;
+}
+.data-input-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.data-input-row div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.file-button, .action-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  display: inline-block;
+  position: relative;
+}
+
+.file-button input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+select {
+  padding: 1px 5px;
+  font-size: 14px;
+}
+
+label {
+  font-weight: bold;
+}
+.leaflet-smooth-heatmap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 500; /* trên tilePane, dưới markerPane */
+    pointer-events: none; /* không chặn thao tác map */
+}
+.recharts-legend-wrapper {
+    white-space: nowrap;
+    text-align: center;
+    overflow: visible !important;
+}
+
+.recharts-tooltip-wrapper {
+    white-space: nowrap;
+    overflow: visible !important;
+    transform: none !important; /* Bỏ transform cố định */
+    left: 0 !important; /* Canh lại nếu cần */
+    bottom: auto !important;
+}
