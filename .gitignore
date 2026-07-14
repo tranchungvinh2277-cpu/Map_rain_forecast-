@@ -42,7 +42,8 @@ Thumbs.db
 *.tmp
 
 # Upload tạm
-/public/Upload/
+/public/Upload/*
+!/public/Upload/Luu_y.png
 
 # Cache Python
 __pycache__/
