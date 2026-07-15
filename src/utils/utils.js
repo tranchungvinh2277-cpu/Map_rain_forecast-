@@ -1,98 +1,208 @@
 // utils/utils.js
-export function getRainSummary(maTram, mergedData, opts = {}) {
+// utils/utils.js
+
+export function getRainSummary(
+    maTram,
+    mergedData,
+    timeData,
+    opts = {}
+) {
+
     const TH24 = opts.threshold24 ?? 50;
     const TH72 = opts.threshold72 ?? 100;
-    const TH120 = opts.threshold120 ?? 50;
-    const mode = opts.from ?? "start";
+    const TH120 = opts.threshold120 ?? 150;
 
-    const station = mergedData?.find((s) => s.MaTram === maTram);
-    if (!station || !Array.isArray(station.forecast) || station.forecast.length === 0) {
-        return makeResult(0, 0, 0, null);
+    const mode = opts.from ?? "now";
+
+    //--------------------------------------
+    // đọc dữ liệu theo mã trạm
+    //--------------------------------------
+
+    const station = mergedData?.[maTram];
+
+    if (!station) {
+
+        return makeResult();
+
     }
 
-    const parseTime = (t) => {
-        const d = new Date(t);
-        return isNaN(d) ? new Date(String(t).replace(/-/g, "/")) : d;
-    };
+    const forecast = station.forecast ?? [];
 
-    const series = station.forecast
-        .map((f) => ({ time: parseTime(f.time), value: Number(f.value) }))
-        .filter((p) => !isNaN(p.time) && Number.isFinite(p.value))
-        .sort((a, b) => a.time - b.time);
+    const forecastTime = timeData?.forecast ?? [];
 
-    if (series.length === 0) {
-        return makeResult(0, 0, 0, null);
+    if (
+        forecast.length === 0 ||
+        forecastTime.length === 0
+    ) {
+        return makeResult();
     }
 
-    const now = new Date();
-    let t0 = series[0].time;
+    //--------------------------------------
+    // Ghép time + value
+    //--------------------------------------
+
+    const series = forecast.map((v, i) => ({
+
+        time: new Date(forecastTime[i]),
+
+        value: Number(v) || 0
+
+    }));
+
+    //--------------------------------------
+    // Chọn thời điểm bắt đầu
+    //--------------------------------------
+
+    let startIndex = 0;
+
     if (mode === "now") {
-        const next = series.find((p) => p.time >= now);
-        t0 = next ? next.time : series[0].time;
+
+        const now = new Date();
+
+        startIndex = series.findIndex(
+            p => p.time >= now
+        );
+
+        if (startIndex < 0)
+            startIndex = 0;
+
     }
 
-    const sumInWindow = (hours) => {
-        const tend = new Date(t0.getTime() + hours * 3600 * 1000);
-        return series
-            .filter((p) => p.time >= t0 && p.time < tend)
-            .reduce((sum, p) => sum + p.value, 0);
-    };
+    //--------------------------------------
+    // Hàm tính tổng
+    //--------------------------------------
 
-    const total24h = +sumInWindow(24).toFixed(1);
-    const total72h = +sumInWindow(72).toFixed(1);
-    const total120h = +sumInWindow(120).toFixed(1);
+    function sumHours(hours) {
 
-    // Tỷ lệ 120h/72h
-    const ratio120_72 = total72h > 0 ? total120h / total72h : null;
+        const end = startIndex + hours;
 
-    // Cảnh báo mưa lớn
-    const warning24h = total24h >= TH24 ? "Cảnh báo mưa lớn 24h" : "";
-    const warning72h = total72h >= TH72 ? "Cảnh báo mưa lớn 72h" : "";
+        let s = 0;
+
+        for (
+            let i = startIndex;
+            i < Math.min(end, series.length);
+            i++
+        ) {
+
+            s += series[i].value;
+
+        }
+
+        return Number(s.toFixed(1));
+
+    }
+
+    //--------------------------------------
+
+    const total24h = sumHours(24);
+
+    const total72h = sumHours(72);
+
+    const total120h = sumHours(120);
+
+    //--------------------------------------
+
+    const ratio120_72 =
+        total72h > 0
+            ? total120h / total72h
+            : null;
+
+    //--------------------------------------
+
+    let warning24h = "";
+
+    if (total24h >= TH24)
+        warning24h = "Cảnh báo mưa lớn 24h";
+
+    let warning72h = "";
+
+    if (total72h >= TH72)
+        warning72h = "Cảnh báo mưa lớn 72h";
 
     let warning120h = "";
-    if (total120h >= TH120 && total120h > 50 && ratio120_72 !== null) {
-        if (ratio120_72 >= 0.8) {
-            warning120h = "Cảnh báo mưa lớn 120h";
-        }
+
+    if (
+        total120h >= TH120 &&
+        ratio120_72 >= 0.8
+    ) {
+
+        warning120h = "Cảnh báo mưa lớn 120h";
+
     }
 
-    // Cấp độ rủi ro
-    let riskLevel = 0;
-    if (total24h > 200 || total72h > 300) riskLevel = 3;
-    else if (total24h > 100 || total72h > 200) riskLevel = 2;
-    else if (total24h > 50 || total72h > 100) riskLevel = 1;
+    //--------------------------------------
 
-    const riskInfo = getRiskInfo(riskLevel);
+    let riskLevel = 0;
+
+    if (total24h > 200 || total72h > 300)
+        riskLevel = 3;
+
+    else if (total24h > 100 || total72h > 200)
+        riskLevel = 2;
+
+    else if (total24h > 50 || total72h > 100)
+        riskLevel = 1;
+
+    //--------------------------------------
+
+    const risk = getRiskInfo(riskLevel);
 
     return {
+
         total24h,
+
         total72h,
+
         total120h,
+
         ratio120_72,
+
         warning24h,
+
         warning72h,
+
         warning120h,
+
         riskLevel,
-        riskLabel: riskInfo.label,
-        riskColor: riskInfo.color,
-        start: t0
+
+        riskLabel: risk.label,
+
+        riskColor: risk.color,
+
+        start: series[startIndex].time
+
     };
+
 }
 
-function makeResult(total24h, total72h, total120h, t0) {
+function makeResult() {
+
     return {
-        total24h,
-        total72h,
-        total120h,
-        ratio120_72: null, // ✅ tránh lỗi no-undef
+
+        total24h: 0,
+
+        total72h: 0,
+
+        total120h: 0,
+
+        ratio120_72: null,
+
         warning24h: "",
+
         warning72h: "",
+
         warning120h: "",
+
         riskLevel: 0,
+
         riskLabel: "Không có dữ liệu",
+
         riskColor: "#808080",
-        start: t0
+
+        start: null
+
     };
+
 }
 
 // ✅ Trả về màu sắc + nhãn theo cấp độ rủi ro

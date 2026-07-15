@@ -5,6 +5,7 @@ import { getRainSummary } from "../utils/utils";
 export default function useFilteredStations({
   tramList,
   mergedData,
+  timeData,
   filterTinh,
   filterLoaiTram,
   riskFilter,
@@ -13,11 +14,11 @@ export default function useFilteredStations({
     const summary = new Map();
 
     for (const station of tramList) {
-      summary.set(station.MaTram, getRainSummary(station.MaTram, mergedData));
+        summary.set(station.MaTram, getRainSummary(station.MaTram, mergedData, timeData));
     }
 
     return summary;
-  }, [tramList, mergedData]);
+  }, [tramList, mergedData, timeData]);
 
   const tinhOptions = useMemo(
     () => [

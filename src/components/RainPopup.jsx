@@ -2,12 +2,13 @@ import React, { memo, useMemo } from "react";
 import RainChart from "./RainChart";
 import { getChartData } from "../utils/mapUtils";
 
-function RainPopup({ station, mergedData, summary, isMobile }) {
+function RainPopup({ station, mergedData, timeData, summary, isMobile }) {
   const chartData = useMemo(
-    () => getChartData(station.MaTram, mergedData),
-    [station.MaTram, mergedData]
+      () => getChartData(station.MaTram, mergedData, timeData),
+      [station.MaTram, mergedData, timeData ]
   );
-
+  console.log(station.MaTram);
+  console.log(chartData.slice(0, 5));
   return (
     <>
       <b>{station.TenTram}</b>

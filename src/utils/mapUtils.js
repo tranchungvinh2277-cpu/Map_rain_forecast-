@@ -10,25 +10,46 @@ export function getNextHour(date = new Date()) {
   return next;
 }
 
-export function getChartData(maTram, mergedData) {
-  const nextHour = getNextHour();
-  const station = mergedData?.find((item) => item.MaTram === maTram);
+export function getChartData(maTram, mergedData, timeData) {
 
-  if (!station || !Array.isArray(station.forecast)) return [];
+    const station = mergedData?.[maTram];
 
-  return station.forecast
-    .map((forecast) => {
-      const time = parseForecastTime(forecast.time);
+    if (!station) return [];
 
-      return {
-        time: time.getTime(),
-        "Mưa dự báo": Number.isFinite(Number(forecast.value))
-          ? Number(forecast.value)
-          : null,
-      };
-    })
-    .filter((forecast) => forecast.time >= nextHour.getTime())
-    .sort((a, b) => a.time - b.time);
+    const forecast = station.forecast ?? [];
+    const forecastTime = timeData?.forecast ?? [];
+
+    const nextHour = getNextHour();
+
+    const chart = [];
+
+    for (let i = 0; i < forecast.length; i++) {
+
+        const timeStr = forecastTime[i];
+
+        if (!timeStr) continue;
+
+        const t = parseForecastTime(timeStr);
+
+        if (isNaN(t.getTime())) continue;
+
+        if (t < nextHour) continue;
+
+        const rain = Number(forecast[i]);
+
+        if (!Number.isFinite(rain)) continue;
+
+        chart.push({
+            time: t.getTime(),
+            "Mưa dự báo": rain
+        });
+
+    }
+
+    chart.sort((a, b) => a.time - b.time);
+    
+    return chart;
+
 }
 
 export function getStationKey(station) {

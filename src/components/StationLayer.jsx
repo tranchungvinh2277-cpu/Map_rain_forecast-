@@ -7,6 +7,7 @@ import { getStationKey, isSameStation } from "../utils/mapUtils";
 function StationLayer({
   stations,
   mergedData,
+  timeData,
   selectedTram,
   markerRefs,
   onSelectTram,
@@ -38,6 +39,7 @@ function StationLayer({
           <RainPopup
             station={station}
             mergedData={mergedData}
+            timeData={timeData}
             summary={summary}
             isMobile={isMobile}
           />

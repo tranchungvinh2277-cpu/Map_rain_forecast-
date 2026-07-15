@@ -16,7 +16,7 @@ import tamTinhData from "../data/TamTinh.geojson";
 export default function RainMap() {
   const markerRefs = useRef({});
   const isMobile = useIsMobile();
-  const { tramList, mergedData, geoData, forecastTime, loading, error } = useForecast();
+  const { tramList, mergedData, geoData, timeData, loading, error } = useForecast();
   const [selectedTram, setSelectedTram] = useState(null);
   const [filterLoaiTram, setFilterLoaiTram] = useState(ALL_VALUE);
   const [filterTinh, setFilterTinh] = useState(ALL_VALUE);
@@ -27,6 +27,7 @@ export default function RainMap() {
     useFilteredStations({
       tramList,
       mergedData,
+      timeData,
       filterTinh,
       filterLoaiTram,
       riskFilter,
@@ -66,7 +67,7 @@ export default function RainMap() {
       <Sidebar
         isMobile={isMobile}
         open={sidebarOpen}
-        forecastTime={forecastTime}
+        timeData={timeData}
         tinhOptions={tinhOptions}
         loaiOptions={loaiOptions}
         filterTinh={filterTinh}
@@ -110,6 +111,7 @@ export default function RainMap() {
           <StationLayer
             stations={filteredStations}
             mergedData={mergedData}
+            timeData={timeData}
             selectedTram={selectedTram}
             markerRefs={markerRefs}
             onSelectTram={handleSelectTram}

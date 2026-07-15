@@ -11,7 +11,7 @@ const riskOptions = [
 function Sidebar({
   isMobile,
   open,
-  forecastTime,
+  timeData,
   tinhOptions,
   loaiOptions,
   filterTinh,
@@ -63,11 +63,23 @@ function Sidebar({
           BẢN ĐỒ MƯA DỰ BÁO - 5 NGÀY
         </h2>
 
-        {forecastTime.start && forecastTime.end && (
-          <p style={{ textAlign: "center", fontWeight: "bold" }}>
-            Thời gian dự báo: {forecastTime.start} - {forecastTime.end}
-          </p>
-        )}
+              {timeData?.forecast?.length > 0 && (
+                  <div
+                      style={{
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          marginBottom: 10,
+                          color: "#0b5394",
+                          lineHeight: 1.5,
+                      }}
+                  >
+                      <div>Thời gian dự báo</div>
+                      <div>
+                          {timeData.forecast[0]} →{" "}
+                          {timeData.forecast[timeData.forecast.length - 1]}
+                      </div>
+                  </div>
+              )}
 
         <p style={{ textAlign: "center", fontSize: "0.9rem", color: "#555" }}>
           Nguồn: Mô hình mưa dự báo toàn cầu GFS -{" "}
