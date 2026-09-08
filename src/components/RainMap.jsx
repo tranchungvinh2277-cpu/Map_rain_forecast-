@@ -12,6 +12,7 @@ import useFilteredStations from "../hooks/useFilteredStations";
 import { ALL_VALUE } from "../utils/normalize";
 import { getStationKey, VIETNAM_BOUNDS } from "../utils/mapUtils";
 import tamTinhData from "../data/TamTinh.geojson";
+import AIChat from "./AIChat/AIChat";
 
 export default function RainMap() {
   const markerRefs = useRef({});
@@ -127,6 +128,20 @@ export default function RainMap() {
           />
           <MapLegend visible={!isMobile} />
         </MapContainer>
+        {/* AI CHAT */}
+        <AIChat
+            mapContext={{
+                lat: selectedTram?.Lat ?? null,
+                lon: selectedTram?.Lon ?? null,
+                zoom: null,
+                selectedProvince: filterTinh,
+                selectedStation: selectedTram,
+            }}
+            forecastContext={{
+                model: "GFS",
+                run: null,
+            }}
+        />
       </div>
     </div>
   );
