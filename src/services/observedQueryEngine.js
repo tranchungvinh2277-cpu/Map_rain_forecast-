@@ -321,7 +321,7 @@ function extractProvince(
                 "hanoi",
                 "thu do ha noi"
             ],
-            province: "Thủ đô Hà Nội"
+            province: "Hà Nội"
         },
 
         {
@@ -1652,12 +1652,12 @@ export async function queryObserved(
     // Determine whether question should use area
     // --------------------------------------------------------
 
+    const isProvinceQuestion =
+        Boolean(province);
+
     const effectiveArea =
-        hasExplicitArea ||
-        Boolean(
-            province &&
-            !selectedStation
-        );
+        isProvinceQuestion ||
+        hasExplicitArea;
 
 
     const base = {
@@ -2079,7 +2079,10 @@ export function formatObservedAnswer(
     // ========================================================
 
     if (
-        result.intent === "AREA"
+        result.intent === "AREA" ||
+        result.areaType === "PROVINCE" ||
+        result.areaType === "AROUND_SELECTED_LOCATION" ||
+        result.areaType === "AROUND_MAP_LOCATION"
     ) {
 
         const data =
