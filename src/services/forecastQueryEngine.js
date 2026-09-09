@@ -1157,41 +1157,26 @@ export function formatForecastAnswer(
             const stationCount =
                 data.numberOfStations ?? 0;
 
+            const radiusKm =
+                data.radiusKm ?? 50;
 
-            if (!stationCount) {
+            // Ngưỡng mưa cảnh báo, đơn vị mm
+            const threshold =
+                data.threshold ?? 50;
 
-                return (
-                    `Trong ${result.hours} giờ tới, ` +
-                    `chưa có trạm GFS nào trong ` +
-                    `bán kính ${data.radiusKm ?? 50} km ` +
-                    `quanh khu vực đang xem.`
-                );
+            const areaMean =
+                data.areaMean ?? 0;
 
-            }
-
+            const areaMax =
+                data.areaMax ?? 0;
 
             const maxStation =
                 data.maxStation;
 
-
-            const maxStationText =
-                maxStation
-                    ? (
-                        `${maxStation.TenTram} ` +
-                        `(${maxStation.MaTram})`
-                    )
-                    : "—";
-
-
-            const threshold =
-                data.threshold ?? 50;
-
-
-            const above =
+            const stationsAboveThreshold =
                 data.stationsAboveThreshold ?? 0;
 
-
-            const percentage =
+            const percentageAboveThreshold =
                 data.percentageAboveThreshold ?? 0;
 
             const stationName =
@@ -1199,42 +1184,56 @@ export function formatForecastAnswer(
                 "đang xem";
 
 
+            // ------------------------------------------------------
+            // KHÔNG CÓ TRẠM TRONG KHU VỰC
+            // ------------------------------------------------------
+
+            if (!stationCount) {
+
+                return (
+                    `Trong ${result.hours} giờ tới, ` +
+                    `chưa có trạm GFS nào trong ` +
+                    `bán kính ${radiusKm} km ` +
+                    `quanh trạm ${stationName}.`
+                );
+
+            }
+
+
+            // ------------------------------------------------------
+            // CÓ DỮ LIỆU
+            // ------------------------------------------------------
+
             return (
                 `Dự báo GFS ${result.hours} giờ tới ` +
                 `tại khu vực lân cận trạm ${stationName} ` +
-                `(bán kính ${result.data?.radiusKm ?? 50} km):\n\n` +
+                `(bán kính ${radiusKm} km):\n\n` +
 
-                `• Số trạm phân tích: ${result.data?.numberOfStations ?? 0}\n` +
+                `• Số trạm phân tích: ` +
+                `${stationCount}\n` +
 
-                `• Mưa trung bình: ${
-                    result.data?.areaMean?.toFixed(2) ?? "0.00"
-                } mm\n` +
+                `• Mưa trung bình: ` +
+                `${areaMean.toFixed(2)} mm\n` +
 
-                `• Mưa lớn nhất: ${
-                    result.data?.areaMax?.toFixed(2) ?? "0.00"
-                } mm\n` +
+                `• Mưa lớn nhất: ` +
+                `${areaMax.toFixed(2)} mm\n` +
 
-                `• Trạm lớn nhất: ${
-                    result.data?.maxStation?.TenTram ||
-                    "Không xác định"
-                }${
-                    result.data?.maxStation?.MaTram
-                        ? ` (${result.data.maxStation.MaTram})`
+                `• Trạm lớn nhất: ` +
+                `${maxStation?.TenTram || "Không xác định"}` +
+
+                `${
+                    maxStation?.MaTram
+                        ? ` (${maxStation.MaTram})`
                         : ""
                 }\n` +
 
-                `• Trạm ≥ ${result.data?.threshold ?? 50} mm: ` +
-                `${result.data?.stationsAboveThreshold ?? 0}/${
-                    result.data?.numberOfStations ?? 0
-                } ` +
-                `(${result.data?.percentageAboveThreshold?.toFixed(0) ?? 0}%)\n\n` +
+                `• Trạm ≥ ${threshold} mm: ` +
+                `${stationsAboveThreshold}/${stationCount} ` +
+                `(${percentageAboveThreshold.toFixed(0)}%)\n\n` +
 
-                `Đánh giá: ${
-                    result.data?.assessment ||
-                    "CHƯA XÁC ĐỊNH"
-                }.\n\n`
+                `Đánh giá: ` +
+                `${data.assessment || "CHƯA XÁC ĐỊNH"}.\n\n`
             );
-
         }
 
 

@@ -73,7 +73,7 @@ export default function AIChat({
     useState(null);
 
 
-  const [observedLoading, setObservedLoading] =
+  const [, setObservedLoading] =
     useState(false);
   /*
    * ========================================================
