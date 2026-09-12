@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  "name": "rain-ai-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-10",
+
+  "observability": {
+    "enabled": true
+  },
+
+  "upload_source_maps": true,
+
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rain_ai_logs",
+      "database_id": "9b135ff3-236e-452b-baa6-198c0d7bbd50"
+    }
+  ]
+}

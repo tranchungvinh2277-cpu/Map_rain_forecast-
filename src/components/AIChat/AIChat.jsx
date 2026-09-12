@@ -22,6 +22,16 @@ import {
 
 
 // ==========================================================
+// CFS ENGINE
+// ==========================================================
+
+import {
+    queryCFSStation,
+    formatCFSAnswer,
+} from "../../services/cfsQueryEngine";
+
+
+// ==========================================================
 // OBSERVED ENGINE
 // ==========================================================
 
@@ -42,6 +52,15 @@ import {
 
 
 // ==========================================================
+// AI LOG → CLOUDFLARE WORKER + D1
+// ==========================================================
+
+import {
+    logAiQuery,
+} from "../../services/aiLog";
+
+
+// ==========================================================
 // INITIAL MESSAGE
 // ==========================================================
 
@@ -54,7 +73,8 @@ const INITIAL_MESSAGE = {
     content:
         "Xin chào! Tôi là trợ lý AI về mưa. " +
         "Bạn có thể hỏi về mưa thực đo, " +
-        "mưa dự báo GFS hoặc so sánh giữa thực đo và dự báo.",
+        "mưa dự báo GFS theo ngày/giờ, " +
+        "hoặc dự báo CFS theo tháng.",
 
 };
 
@@ -71,6 +91,187 @@ function generateId() {
             .toString(36)
             .substring(2, 9)}`
     );
+
+}
+
+
+// ==========================================================
+// NORMALIZE TEXT
+// ==========================================================
+//
+// Dùng riêng cho việc routing engine.
+// Không thay đổi text gốc mà người dùng nhập.
+// ==========================================================
+
+function normalizeRainQuestion(question) {
+
+    return String(question || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+}
+
+
+// ==========================================================
+// DETECT RAIN ENGINE
+// ==========================================================
+//
+// QUY TẮC:
+//
+// 1. OBSERVED
+//    Thời gian đã xảy ra:
+//      - qua
+//      - trước
+//      - hôm qua
+//      - đã mưa
+//      - thực đo
+//      - thực tế
+//
+// 2. GFS
+//    Dự báo ngày / giờ:
+//      - tới
+//      - sắp tới
+//      - hôm nay
+//      - ngày mai
+//      - giờ tới
+//      - ngày tới
+//
+// 3. CFS
+//    Dự báo theo tháng:
+//      - CFS
+//      - CFSv2
+//      - tháng
+//
+// ----------------------------------------------------------
+// ƯU TIÊN:
+//
+// OBSERVED > GFS > CFS
+//
+// Ví dụ:
+//
+// "Trong tháng này 24 giờ qua mưa thế nào?"
+//      → OBSERVED
+//
+// "Trong tháng này 24 giờ tới mưa thế nào?"
+//      → GFS
+//
+// "Dự báo mưa tháng 10"
+//      → CFS
+//
+// "CFS tháng 10"
+//      → CFS
+// ==========================================================
+
+function detectRainEngine(question) {
+
+    const q =
+        normalizeRainQuestion(
+            question
+        );
+
+
+    // ======================================================
+    // 1. OBSERVED
+    // ======================================================
+    //
+    // Các từ chỉ thời gian đã xảy ra
+    // được ưu tiên cao nhất.
+    //
+    // Điều này rất quan trọng đối với các câu như:
+    //
+    // "Trong tháng này 24 giờ qua mưa thế nào?"
+    //
+    // → OBSERVED
+    // ======================================================
+
+    if (
+
+        q.includes("qua") ||
+
+        q.includes("truoc") ||
+
+        q.includes("hom qua") ||
+
+        q.includes("da mua") ||
+
+        q.includes("thuc do") ||
+
+        q.includes("thuc te")
+
+    ) {
+
+        return "OBSERVED";
+
+    }
+
+
+    // ======================================================
+    // 2. GFS
+    // ======================================================
+    //
+    // GFS chỉ xử lý dự báo ngày / giờ.
+    //
+    // Không dùng "tháng" ở đây.
+    // ======================================================
+
+    if (
+
+        q.includes("gio toi") ||
+
+        q.includes("ngay toi") ||
+
+        q.includes("sap toi") ||
+
+        q.includes("hom nay") ||
+
+        q.includes("ngay mai")
+
+    ) {
+
+        return "GFS";
+
+    }
+
+
+    // ======================================================
+    // 3. CFS
+    // ======================================================
+    //
+    // CFS xử lý dự báo theo tháng.
+    //
+    // Có thể gọi trực tiếp:
+    //
+    // "CFS tháng 10"
+    //
+    // hoặc tự nhiên:
+    //
+    // "Dự báo mưa tháng 10"
+    // ======================================================
+
+    if (
+
+        /\bcfs(?:v2)?\b/.test(q) ||
+
+        q.includes("thang")
+
+    ) {
+
+        return "CFS";
+
+    }
+
+
+    // ======================================================
+    // 4. DEFAULT
+    // ======================================================
+    //
+    // Nếu không xác định được rõ nguồn dữ liệu,
+    // giữ hành vi cũ: chạy GFS.
+    // ======================================================
+
+    return "GFS";
 
 }
 
@@ -326,13 +527,63 @@ export default function AIChat({
 
 
             // ==================================================
-            // DETECT DATA SOURCE
+            // DETECT DATA ENGINE
+            // ==================================================
+            //
+            // Đây là routing chính:
+            //
+            // OBSERVED → thời gian đã qua
+            // GFS      → ngày / giờ tới
+            // CFS      → theo tháng
             // ==================================================
 
-            const dataSource =
+            const rainEngine =
+                detectRainEngine(
+                    text
+                );
+
+
+            // ==================================================
+            // EXISTING OBSERVED DETECTION
+            // ==================================================
+            //
+            // Giữ detectRainDataSource để tương thích với
+            // observedQueryEngine hiện tại.
+            // ==================================================
+
+            const detectedDataSource =
                 detectRainDataSource(
                     text
                 );
+
+
+            // ==================================================
+            // FINAL DATA SOURCE
+            // ==================================================
+            //
+            // rainEngine có quyền ưu tiên.
+            //
+            // Riêng trường hợp không phải CFS/GFS rõ ràng,
+            // vẫn cho phép observedQueryEngine nhận diện
+            // OBSERVED.
+            // ==================================================
+
+            const dataSource =
+
+                rainEngine === "CFS"
+
+                    ? "CFS"
+
+                    : rainEngine === "OBSERVED"
+
+                        ? "OBSERVED"
+
+                        : detectedDataSource ===
+                            "OBSERVED"
+
+                            ? "OBSERVED"
+
+                            : "GFS";
 
 
             // ==================================================
@@ -351,8 +602,26 @@ export default function AIChat({
 
 
             console.log(
-                "RAIN DATA SOURCE:",
+                "RAIN ENGINE:",
+                rainEngine
+            );
+
+
+            console.log(
+                "DETECTED DATA SOURCE:",
+                detectedDataSource
+            );
+
+
+            console.log(
+                "FINAL RAIN DATA SOURCE:",
                 dataSource
+            );
+
+
+            console.log(
+                "SELECTED STATION:",
+                selectedMaTram
             );
 
 
@@ -360,6 +629,239 @@ export default function AIChat({
                 "RAIN CONTEXT:",
                 context
             );
+
+
+            // ==================================================
+            // CFS
+            // ==================================================
+
+            if (
+                dataSource ===
+                "CFS"
+            ) {
+
+                console.log(
+                    "[AIChat] Routing to CFS engine"
+                );
+
+
+                // ------------------------------------------------
+                // CFS hiện tại hoạt động theo trạm.
+                // ------------------------------------------------
+
+                if (!selectedMaTram) {
+
+                    const answer =
+                        "Bạn hãy chọn một trạm trên bản đồ " +
+                        "để tôi tra cứu dự báo mưa CFS theo tháng.";
+
+
+                    const assistantMessage = {
+
+                        id:
+                            generateId(),
+
+                        role:
+                            "assistant",
+
+                        content:
+                            answer,
+
+                        dataSource:
+                            "CFS",
+
+                    };
+
+
+                    setMessages(
+                        prev => [
+
+                            ...prev,
+
+                            assistantMessage,
+
+                        ]
+                    );
+
+
+                    // ------------------------------------------------
+                    // LOG CFS - KHÔNG CÓ TRẠM
+                    // ------------------------------------------------
+
+                    logAiQuery({
+
+                        question:
+                            text,
+
+                        answer:
+                            answer,
+
+                        messageId:
+                            assistantMessage.id,
+
+                        intent:
+                            "CFS",
+
+                        dataSource:
+                            "CFS",
+
+                        selectedProvince:
+                            mapContext?.selectedProvince ||
+                            null,
+
+                        selectedStation:
+                            mapContext?.selectedStation ||
+                            null,
+
+                        mapContext:
+                            mapContext,
+
+                        result:
+                            null,
+
+                        cfsResult:
+                            null,
+
+                        success:
+                            false,
+
+                        errorMessage:
+                            "No selected station",
+
+                    });
+
+
+                    return;
+
+                }
+
+
+                // ------------------------------------------------
+                // QUERY CFS
+                // ------------------------------------------------
+
+                const result =
+                    await queryCFSStation(
+                        selectedMaTram,
+                        text
+                    );
+
+
+                console.log(
+                    "CFS QUERY RESULT:",
+                    result
+                );
+
+
+                // ------------------------------------------------
+                // FORMAT CFS ANSWER
+                // ------------------------------------------------
+
+                const answer =
+                    formatCFSAnswer(
+                        result
+                    );
+
+
+                console.log(
+                    "CFS ANSWER:",
+                    answer
+                );
+
+
+                // ------------------------------------------------
+                // ASSISTANT MESSAGE
+                // ------------------------------------------------
+
+                const assistantMessage = {
+
+                    id:
+                        generateId(),
+
+                    role:
+                        "assistant",
+
+                    content:
+                        answer,
+
+                    dataSource:
+                        "CFS",
+
+                    cfsResult:
+                        result,
+
+                };
+
+
+                setMessages(
+                    prev => [
+
+                        ...prev,
+
+                        assistantMessage,
+
+                    ]
+                );
+
+
+                // ------------------------------------------------
+                // LOG CFS QUERY
+                // Fire-and-forget
+                // ------------------------------------------------
+
+                logAiQuery({
+
+                    question:
+                        text,
+
+                    answer:
+                        answer,
+
+                    messageId:
+                        assistantMessage.id,
+
+                    intent:
+                        result?.intent ||
+                        "CFS",
+
+                    dataSource:
+                        "CFS",
+
+                    selectedProvince:
+                        mapContext?.selectedProvince ||
+                        result?.province ||
+                        null,
+
+                    selectedStation:
+                        mapContext?.selectedStation ||
+                        selectedMaTram ||
+                        null,
+
+                    mapContext:
+                        mapContext,
+
+                    result:
+                        result,
+
+                    cfsResult:
+                        result,
+
+                    success:
+                        result?.success !== false,
+
+                    errorMessage:
+                        result?.success === false
+                            ? result?.error ||
+                              result?.message ||
+                              null
+                            : null,
+
+                });
+
+
+                return;
+
+            }
 
 
             // ==================================================
@@ -395,6 +897,12 @@ export default function AIChat({
                     );
 
 
+                console.log(
+                    "OBSERVED ANSWER:",
+                    answer
+                );
+
+
                 const assistantMessage = {
 
                     id:
@@ -426,17 +934,70 @@ export default function AIChat({
                 );
 
 
+                // ==================================================
+                // LOG OBSERVED QUERY
+                // Fire-and-forget: không await
+                // ==================================================
+
+                logAiQuery({
+
+                    question:
+                        text,
+
+                    answer:
+                        answer,
+
+                    messageId:
+                        assistantMessage.id,
+
+                    intent:
+                        result?.intent || null,
+
+                    dataSource:
+                        "OBSERVED",
+
+                    selectedProvince:
+                        mapContext?.selectedProvince ||
+                        result?.province ||
+                        null,
+
+                    selectedStation:
+                        mapContext?.selectedStation ||
+                        null,
+
+                    mapContext:
+                        mapContext,
+
+                    result:
+                        result,
+
+                    observedResult:
+                        result,
+
+                    success:
+                        result?.success !== false,
+
+                    errorMessage:
+                        result?.success === false
+                            ? result?.error ||
+                              result?.message ||
+                              null
+                            : null,
+
+                });
+
+
                 return;
 
             }
 
 
             // ==================================================
-            // FORECAST
+            // GFS / FORECAST
             // ==================================================
 
             console.log(
-                "[AIChat] Routing to FORECAST engine"
+                "[AIChat] Routing to FORECAST / GFS engine"
             );
 
 
@@ -457,6 +1018,12 @@ export default function AIChat({
                 formatForecastAnswer(
                     result
                 );
+
+
+            console.log(
+                "FORECAST ANSWER:",
+                answer
+            );
 
 
             const assistantMessage = {
@@ -489,6 +1056,60 @@ export default function AIChat({
 
                 ]
             );
+
+
+            // ==================================================
+            // LOG FORECAST QUERY
+            // Fire-and-forget: không await
+            // ==================================================
+
+            logAiQuery({
+
+                question:
+                    text,
+
+                answer:
+                    answer,
+
+                messageId:
+                    assistantMessage.id,
+
+                intent:
+                    result?.intent || null,
+
+                dataSource:
+                    result?.source ||
+                    "GFS",
+
+                selectedProvince:
+                    mapContext?.selectedProvince ||
+                    result?.province ||
+                    null,
+
+                selectedStation:
+                    mapContext?.selectedStation ||
+                    null,
+
+                mapContext:
+                    mapContext,
+
+                result:
+                    result,
+
+                forecastResult:
+                    result,
+
+                success:
+                    result?.success !== false,
+
+                errorMessage:
+                    result?.success === false
+                        ? result?.error ||
+                          result?.message ||
+                          null
+                        : null,
+
+            });
 
 
         } catch (error) {
@@ -920,6 +1541,7 @@ export default function AIChat({
             )}
 
         </>
+
     );
 
 }

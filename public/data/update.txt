@@ -1,0 +1,7 @@
+copy 2 file metadata_observed_qc_last24.json và metadata_observed_qc_last72.json tại thư muc
+C:\Users\minh\OneDrive\NAWAPI\HYDROMET_DATA\Scrip\OBS\RainProcessing\QC\output\hourly\last24
+C:\Users\minh\OneDrive\NAWAPI\HYDROMET_DATA\Scrip\OBS\RainProcessing\QC\output\hourly\last72
+sau khi đã chạy QC
+1. git add public/data/metadata_observed_qc_last24.json public/data/metadata_observed_qc_last72.json
+2. git commit -m "Update observed rainfall metadata"
+3. git push origin main

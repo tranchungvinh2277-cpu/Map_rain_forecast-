@@ -7,8 +7,7 @@ function RainPopup({ station, mergedData, timeData, summary, isMobile }) {
       () => getChartData(station.MaTram, mergedData, timeData),
       [station.MaTram, mergedData, timeData ]
   );
-  console.log(station.MaTram);
-  console.log(chartData.slice(0, 5));
+
   return (
     <>
       <b>{station.TenTram}</b>
