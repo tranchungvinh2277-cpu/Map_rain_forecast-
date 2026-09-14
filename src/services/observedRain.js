@@ -278,21 +278,21 @@ export async function getObservedSummary(
         period,
 
         startTime:
-            dataInfo?.StartTime ||
-            null,
+            dataInfo?.StartTime || null,
 
         endTime:
-            dataInfo?.LastTime ||
-            null,
+            dataInfo?.LastTime || null,
 
         lastUpdate:
+            dataInfo?.LastUpdate || null,
+
+        latestDataTime:
+            dataInfo?.LastTime ||
             dataInfo?.LastUpdate ||
             null,
 
         timeSteps:
-            dataInfo?.TimeSteps ??
-            0,
-
+            dataInfo?.TimeSteps ?? 0,
 
         // --------------------------------------------------
         // RAINFALL
@@ -560,64 +560,62 @@ export async function getObservedAIData(
 
         observed: {
 
-            last24:
-                last24
-                    ? {
-                        startTime:
-                            last24.startTime,
+            last24: last24
+                ? {
+                    startTime:
+                        last24.startTime,
 
-                        endTime:
-                            last24.endTime,
+                    endTime:
+                        last24.endTime,
 
-                        lastUpdate:
-                            last24.lastUpdate,
+                    latestDataTime:
+                        last24.latestDataTime,
 
-                        rainSum:
-                            last24.rainSum,
+                    rainSum:
+                        last24.rainSum,
 
-                        rainMean:
-                            last24.rainMean,
+                    rainMean:
+                        last24.rainMean,
 
-                        rainMax:
-                            last24.rainMax,
+                    rainMax:
+                        last24.rainMax,
 
-                        rainHours:
-                            last24.rainHours,
+                    rainHours:
+                        last24.rainHours,
 
-                        qc:
-                            last24.qc,
-                    }
-                    : null,
+                    qc:
+                        last24.qc,
+                }
+                : null,
 
 
-            last72:
-                last72
-                    ? {
-                        startTime:
-                            last72.startTime,
+            last72: last72
+                ? {
+                    startTime:
+                        last72.startTime,
 
-                        endTime:
-                            last72.endTime,
+                    endTime:
+                        last72.endTime,
 
-                        lastUpdate:
-                            last72.lastUpdate,
+                    latestDataTime:
+                        last72.latestDataTime,
 
-                        rainSum:
-                            last72.rainSum,
+                    rainSum:
+                        last72.rainSum,
 
-                        rainMean:
-                            last72.rainMean,
+                    rainMean:
+                        last72.rainMean,
 
-                        rainMax:
-                            last72.rainMax,
+                    rainMax:
+                        last72.rainMax,
 
-                        rainHours:
-                            last72.rainHours,
+                    rainHours:
+                        last72.rainHours,
 
-                        qc:
-                            last72.qc,
-                    }
-                    : null,
+                    qc:
+                        last72.qc,
+                }
+                : null,
 
         },
 

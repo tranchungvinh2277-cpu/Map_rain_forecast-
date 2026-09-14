@@ -1350,6 +1350,10 @@ function calculateAreaStatistics(
         valid.length;
 
 
+    // --------------------------------------------------------
+    // No valid station
+    // --------------------------------------------------------
+
     if (!numberOfStations) {
 
         return {
@@ -1376,10 +1380,17 @@ function calculateAreaStatistics(
             percentageWithRain:
                 0,
 
+            latestDataTime:
+                null,
+
         };
 
     }
 
+
+    // --------------------------------------------------------
+    // Rainfall values
+    // --------------------------------------------------------
 
     const values =
         valid.map(
@@ -1389,6 +1400,10 @@ function calculateAreaStatistics(
                 ) || 0
         );
 
+
+    // --------------------------------------------------------
+    // Area mean
+    // --------------------------------------------------------
 
     const total =
         values.reduce(
@@ -1406,6 +1421,10 @@ function calculateAreaStatistics(
         numberOfStations;
 
 
+    // --------------------------------------------------------
+    // Area maximum
+    // --------------------------------------------------------
+
     const maxValue =
         Math.max(
             ...values
@@ -1420,6 +1439,10 @@ function calculateAreaStatistics(
                 ) === maxValue
         ) || null;
 
+
+    // --------------------------------------------------------
+    // Stations with rain
+    // --------------------------------------------------------
 
     const stationsWithRain =
         valid.filter(
@@ -1439,6 +1462,77 @@ function calculateAreaStatistics(
             : 0;
 
 
+    // --------------------------------------------------------
+    // Latest observed data time
+    //
+    // getObservedSummary() already returns:
+    //
+    //   endTime = DataInfo.LastTime
+    //
+    // We use the latest valid endTime among stations.
+    // This is the actual last observed data timestamp,
+    // NOT a latency / delay value.
+    // --------------------------------------------------------
+
+    const validTimes =
+        valid
+            .map(
+                station =>
+                    station.endTime
+            )
+            .filter(
+                Boolean
+            );
+
+
+    const latestDataTime =
+        validTimes.length
+            ? validTimes.reduce(
+                (
+                    latest,
+                    current
+                ) => {
+
+                    const latestDate =
+                        new Date(
+                            latest
+                        );
+
+                    const currentDate =
+                        new Date(
+                            current
+                        );
+
+                    if (
+                        Number.isNaN(
+                            currentDate.getTime()
+                        )
+                    ) {
+                        return latest;
+                    }
+
+                    if (
+                        Number.isNaN(
+                            latestDate.getTime()
+                        )
+                    ) {
+                        return current;
+                    }
+
+                    return currentDate >
+                        latestDate
+                        ? current
+                        : latest;
+
+                }
+            )
+            : null;
+
+
+    // --------------------------------------------------------
+    // Return
+    // --------------------------------------------------------
+
     return {
 
         ...metadata,
@@ -1455,6 +1549,8 @@ function calculateAreaStatistics(
         stationsWithRain,
 
         percentageWithRain,
+
+        latestDataTime,
 
         stations:
             valid,
@@ -2198,31 +2294,14 @@ export function formatObservedAnswer(
 
 
         return (
-
             `${title}\n\n` +
-
-            `• Số trạm phân tích: ` +
-            `${count}\n` +
-
-            `• Mưa trung bình: ` +
-            `${areaMean.toFixed(2)} mm\n` +
-
-            `• Mưa lớn nhất: ` +
-            `${areaMax.toFixed(2)} mm\n` +
-
-            `• Trạm lớn nhất: ` +
-            `${maxStation?.TenTram || "Không xác định"}` +
-
-            `${
-                maxStation?.MaTram
-                    ? ` (${maxStation.MaTram})`
-                    : ""
-            }\n` +
-
-            `• Trạm có mưa: ` +
-            `${stationsWithRain}/${count} ` +
-            `(${percentageWithRain.toFixed(0)}%)\n\n` +
-
+            `• Số trạm phân tích: ${count}\n` +
+            `• Mưa trung bình: ${areaMean.toFixed(2)} mm\n` +
+            `• Mưa lớn nhất: ${areaMax.toFixed(2)} mm\n` +
+            `• Trạm lớn nhất: ${maxStation?.TenTram || "Không xác định"}` +
+            `${maxStation?.MaTram ? ` (${maxStation.MaTram})` : ""}\n` +
+            `• Trạm có mưa: ${stationsWithRain}/${count} (${percentageWithRain.toFixed(0)}%)\n` +
+            `• Số liệu cập nhật đến: ${data.latestDataTime ?? "—"}\n\n` +
             `Đánh giá: ` +
             buildObservedAssessment(
                 areaMean,
@@ -2230,7 +2309,6 @@ export function formatObservedAnswer(
                 stationsWithRain,
                 count
             ) +
-
             `.`
         );
     }
@@ -2382,7 +2460,10 @@ export function formatObservedAnswer(
 
         `• Thời kỳ: ` +
         `${summary.startTime ?? "—"} → ` +
-        `${summary.endTime ?? "—"}\n\n` +
+        `${summary.endTime ?? "—"}\n` +
+
+        `• Số liệu cập nhật đến: ` +
+        `${summary.latestDataTime ?? summary.endTime ?? "—"}\n\n` +
 
         `Đánh giá chất lượng: ` +
         `${summary.qc?.status || "Chưa xác định"}.`
