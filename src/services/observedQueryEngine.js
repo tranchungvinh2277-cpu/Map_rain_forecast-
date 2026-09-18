@@ -321,7 +321,7 @@ function extractProvince(
                 "hanoi",
                 "thu do ha noi"
             ],
-            province: "Hà Nội"
+            province: "Thủ đô Hà Nội"
         },
 
         {
