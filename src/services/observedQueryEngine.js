@@ -205,280 +205,70 @@ function extractProvince(
 
     const provinceAliases = [
 
-        {
-            aliases: ["an giang"],
-            province: "An Giang"
-        },
+        { aliases: ["an giang"], province: "An Giang" },
+        { aliases: ["bac ninh"], province: "Bắc Ninh" },
+        { aliases: ["bac giang"], province: "Bắc Giang" },
+        { aliases: ["bac kan", "bac can"], province: "Bắc Kạn" },
+        { aliases: ["bac lieu"], province: "Bạc Liêu" },
+        { aliases: ["ben tre"], province: "Bến Tre" },
+        { aliases: ["binh duong"], province: "Bình Dương" },
+        { aliases: ["binh dinh"], province: "Bình Định" },
+        { aliases: ["binh phuoc"], province: "Bình Phước" },
+        { aliases: ["binh thuan"], province: "Bình Thuận" },
+        { aliases: ["ca mau"], province: "Cà Mau" },
+        { aliases: ["can tho"], province: "Cần Thơ" },
+        { aliases: ["cao bang"], province: "Cao Bằng" },
+        { aliases: ["da nang"], province: "Đà Nẵng" },
+        { aliases: ["dak lak", "dac lac"], province: "Đắk Lắk" },
+        { aliases: ["dak nong"], province: "Đắk Nông" },
+        { aliases: ["dien bien"], province: "Điện Biên" },
+        { aliases: ["dong nai"], province: "Đồng Nai" },
+        { aliases: ["dong thap"], province: "Đồng Tháp" },
+        { aliases: ["gia lai"], province: "Gia Lai" },
+        { aliases: ["ha giang"], province: "Hà Giang" },
+        { aliases: ["ha nam"], province: "Hà Nam" },
 
-        {
-            aliases: ["bac ninh"],
-            province: "Bắc Ninh"
-        },
-
-        {
-            aliases: ["bac giang"],
-            province: "Bắc Giang"
-        },
-
-        {
-            aliases: ["bac kan", "bac can"],
-            province: "Bắc Kạn"
-        },
-
-        {
-            aliases: ["bac lieu"],
-            province: "Bạc Liêu"
-        },
-
-        {
-            aliases: ["ben tre"],
-            province: "Bến Tre"
-        },
-
-        {
-            aliases: ["binh duong"],
-            province: "Bình Dương"
-        },
-
-        {
-            aliases: ["binh dinh"],
-            province: "Bình Định"
-        },
-
-        {
-            aliases: ["binh phuoc"],
-            province: "Bình Phước"
-        },
-
-        {
-            aliases: ["binh thuan"],
-            province: "Bình Thuận"
-        },
-
-        {
-            aliases: ["ca mau"],
-            province: "Cà Mau"
-        },
-
-        {
-            aliases: ["can tho"],
-            province: "Cần Thơ"
-        },
-
-        {
-            aliases: ["cao bang"],
-            province: "Cao Bằng"
-        },
-
-        {
-            aliases: ["da nang"],
-            province: "Đà Nẵng"
-        },
-
-        {
-            aliases: ["dak lak", "dac lac"],
-            province: "Đắk Lắk"
-        },
-
-        {
-            aliases: ["dak nong"],
-            province: "Đắk Nông"
-        },
-
-        {
-            aliases: ["dien bien"],
-            province: "Điện Biên"
-        },
-
-        {
-            aliases: ["dong nai"],
-            province: "Đồng Nai"
-        },
-
-        {
-            aliases: ["dong thap"],
-            province: "Đồng Tháp"
-        },
-
-        {
-            aliases: ["gia lai"],
-            province: "Gia Lai"
-        },
-
-        {
-            aliases: ["ha giang"],
-            province: "Hà Giang"
-        },
-
-        {
-            aliases: ["ha nam"],
-            province: "Hà Nam"
-        },
-
+        // ⭐ QUAN TRỌNG
         {
             aliases: [
                 "ha noi",
-                "hanoi",
-                "thu do ha noi"
+                "thu do ha noi",
+                "hanoi"
             ],
             province: "Thủ đô Hà Nội"
         },
 
-        {
-            aliases: ["ha tinh"],
-            province: "Hà Tĩnh"
-        },
-
-        {
-            aliases: ["hai duong"],
-            province: "Hải Dương"
-        },
-
-        {
-            aliases: ["hai phong"],
-            province: "Hải Phòng"
-        },
-
-        {
-            aliases: ["hau giang"],
-            province: "Hậu Giang"
-        },
-
-        {
-            aliases: ["hoa binh"],
-            province: "Hòa Bình"
-        },
-
-        {
-            aliases: ["hung yen"],
-            province: "Hưng Yên"
-        },
-
-        {
-            aliases: ["khanh hoa"],
-            province: "Khánh Hòa"
-        },
-
-        {
-            aliases: ["kien giang"],
-            province: "Kiên Giang"
-        },
-
-        {
-            aliases: ["kon tum"],
-            province: "Kon Tum"
-        },
-
-        {
-            aliases: ["lai chau"],
-            province: "Lai Châu"
-        },
-
-        {
-            aliases: ["lam dong"],
-            province: "Lâm Đồng"
-        },
-
-        {
-            aliases: ["lang son"],
-            province: "Lạng Sơn"
-        },
-
-        {
-            aliases: ["lao cai"],
-            province: "Lào Cai"
-        },
-
-        {
-            aliases: ["long an"],
-            province: "Long An"
-        },
-
-        {
-            aliases: ["nam dinh"],
-            province: "Nam Định"
-        },
-
-        {
-            aliases: ["nghe an"],
-            province: "Nghệ An"
-        },
-
-        {
-            aliases: ["ninh binh"],
-            province: "Ninh Bình"
-        },
-
-        {
-            aliases: ["ninh thuan"],
-            province: "Ninh Thuận"
-        },
-
-        {
-            aliases: ["phu tho"],
-            province: "Phú Thọ"
-        },
-
-        {
-            aliases: ["phu yen"],
-            province: "Phú Yên"
-        },
-
-        {
-            aliases: ["quang binh"],
-            province: "Quảng Bình"
-        },
-
-        {
-            aliases: ["quang nam"],
-            province: "Quảng Nam"
-        },
-
-        {
-            aliases: ["quang ngai"],
-            province: "Quảng Ngãi"
-        },
-
-        {
-            aliases: ["quang ninh"],
-            province: "Quảng Ninh"
-        },
-
-        {
-            aliases: ["quang tri"],
-            province: "Quảng Trị"
-        },
-
-        {
-            aliases: ["soc trang"],
-            province: "Sóc Trăng"
-        },
-
-        {
-            aliases: ["son la"],
-            province: "Sơn La"
-        },
-
-        {
-            aliases: ["tay ninh"],
-            province: "Tây Ninh"
-        },
-
-        {
-            aliases: ["thai binh"],
-            province: "Thái Bình"
-        },
-
-        {
-            aliases: ["thai nguyen"],
-            province: "Thái Nguyên"
-        },
-
-        {
-            aliases: ["thanh hoa"],
-            province: "Thanh Hóa"
-        },
-
+        { aliases: ["ha tinh"], province: "Hà Tĩnh" },
+        { aliases: ["hai duong"], province: "Hải Dương" },
+        { aliases: ["hai phong"], province: "Hải Phòng" },
+        { aliases: ["hau giang"], province: "Hậu Giang" },
+        { aliases: ["hoa binh"], province: "Hòa Bình" },
+        { aliases: ["hung yen"], province: "Hưng Yên" },
+        { aliases: ["khanh hoa"], province: "Khánh Hòa" },
+        { aliases: ["kien giang"], province: "Kiên Giang" },
+        { aliases: ["kon tum"], province: "Kon Tum" },
+        { aliases: ["lai chau"], province: "Lai Châu" },
+        { aliases: ["lam dong"], province: "Lâm Đồng" },
+        { aliases: ["lang son"], province: "Lạng Sơn" },
+        { aliases: ["lao cai"], province: "Lào Cai" },
+        { aliases: ["long an"], province: "Long An" },
+        { aliases: ["nam dinh"], province: "Nam Định" },
+        { aliases: ["nghe an"], province: "Nghệ An" },
+        { aliases: ["ninh binh"], province: "Ninh Bình" },
+        { aliases: ["ninh thuan"], province: "Ninh Thuận" },
+        { aliases: ["phu tho"], province: "Phú Thọ" },
+        { aliases: ["phu yen"], province: "Phú Yên" },
+        { aliases: ["quang binh"], province: "Quảng Bình" },
+        { aliases: ["quang nam"], province: "Quảng Nam" },
+        { aliases: ["quang ngai"], province: "Quảng Ngãi" },
+        { aliases: ["quang ninh"], province: "Quảng Ninh" },
+        { aliases: ["quang tri"], province: "Quảng Trị" },
+        { aliases: ["soc trang"], province: "Sóc Trăng" },
+        { aliases: ["son la"], province: "Sơn La" },
+        { aliases: ["tay ninh"], province: "Tây Ninh" },
+        { aliases: ["thai binh"], province: "Thái Bình" },
+        { aliases: ["thai nguyen"], province: "Thái Nguyên" },
+        { aliases: ["thanh hoa"], province: "Thanh Hóa" },
         {
             aliases: [
                 "thua thien hue",
@@ -486,54 +276,20 @@ function extractProvince(
             ],
             province: "Thừa Thiên Huế"
         },
-
-        {
-            aliases: ["tien giang"],
-            province: "Tiền Giang"
-        },
-
-        {
-            aliases: ["tra vinh"],
-            province: "Trà Vinh"
-        },
-
-        {
-            aliases: ["tuyen quang"],
-            province: "Tuyên Quang"
-        },
-
-        {
-            aliases: ["vinh long"],
-            province: "Vĩnh Long"
-        },
-
-        {
-            aliases: ["vinh phuc"],
-            province: "Vĩnh Phúc"
-        },
-
-        {
-            aliases: ["yen bai"],
-            province: "Yên Bái"
-        },
-
-        {
-            aliases: [
-                "ho chi minh",
-                "tphcm",
-                "tp hcm"
-            ],
-            province: "Hồ Chí Minh"
-        },
-
+        { aliases: ["tien giang"], province: "Tiền Giang" },
+        { aliases: ["tra vinh"], province: "Trà Vinh" },
+        { aliases: ["tuyen quang"], province: "Tuyên Quang" },
+        { aliases: ["vinh long"], province: "Vĩnh Long" },
+        { aliases: ["vinh phuc"], province: "Vĩnh Phúc" },
+        { aliases: ["yen bai"], province: "Yên Bái" },
+        { aliases: ["ho chi minh", "tphcm", "tp hcm"], province: "Hồ Chí Minh" },
         {
             aliases: [
                 "ba ria vung tau",
                 "ba ria - vung tau"
             ],
             province: "Bà Rịa - Vũng Tàu"
-        },
-
+        }
     ];
 
 
