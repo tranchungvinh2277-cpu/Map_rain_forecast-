@@ -1314,267 +1314,15 @@
 
 
 /* =========================================================
-   MOBILE INPUT FIX
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-  .ai-chat-input-wrapper {
-
-    width:
-      100%;
-
-    max-width:
-      100%;
-
-    padding:
-      8px 9px;
-
-    gap:
-      6px;
-
-    box-sizing:
-      border-box;
-
-    overflow:
-      hidden;
-
-  }
-
-
-  .ai-chat-input {
-
-    flex:
-      1 1 auto;
-
-    width:
-      0;
-
-    min-width:
-      0;
-
-    /*
-     * Chatbox có padding + gap + nút gửi.
-     * Input chỉ được sử dụng phần còn lại.
-     */
-    max-width:
-      calc(100% - 48px);
-
-    min-height:
-      42px;
-
-    max-height:
-      110px;
-
-    padding:
-      10px 11px;
-
-    border-radius:
-      11px;
-
-    font-size:
-      13px;
-
-    box-sizing:
-      border-box;
-
-  }
-
-
-  .ai-chat-send-button {
-
-    flex:
-      0 0 42px;
-
-    width:
-      42px;
-
-    min-width:
-      42px;
-
-    max-width:
-      42px;
-
-    height:
-      42px;
-
-    min-height:
-      42px;
-
-    max-height:
-      42px;
-
-    padding:
-      0;
-
-    margin:
-      0;
-
-    border-radius:
-      11px;
-
-    font-size:
-      17px;
-
-    flex-shrink:
-      0;
-
-    box-sizing:
-      border-box;
-
-  }
-
-}
-
-
-/* =========================================================
-   VERY SMALL MOBILE
-   ========================================================= */
-
-@media (max-width: 380px) {
-
-  .ai-chat-input-wrapper {
-
-    padding:
-      7px 8px;
-
-    gap:
-      5px;
-
-  }
-
-
-  .ai-chat-input {
-
-    flex:
-      1 1 auto;
-
-    width:
-      0;
-
-    min-width:
-      0;
-
-    max-width:
-      calc(100% - 45px);
-
-    min-height:
-      40px;
-
-    max-height:
-      100px;
-
-    padding:
-      9px 10px;
-
-    font-size:
-      12px;
-
-  }
-
-
-  .ai-chat-send-button {
-
-    flex:
-      0 0 40px;
-
-    width:
-      40px;
-
-    min-width:
-      40px;
-
-    max-width:
-      40px;
-
-    height:
-      40px;
-
-    min-height:
-      40px;
-
-    max-height:
-      40px;
-
-    border-radius:
-      10px;
-
-    font-size:
-      16px;
-
-  }
-
-}
-
-
-/* =========================================================
-   DESKTOP - LARGE SCREEN
-   ========================================================= */
-
-@media (min-width: 1200px) {
-
-  .ai-chat-panel {
-
-    width:
-      400px;
-
-    height:
-      640px;
-
-  }
-
-}
-
-
-/* =========================================================
-   TABLET
-   ========================================================= */
-
-@media (min-width: 601px)
-       and (max-width: 900px) {
-
-  .ai-chat-floating-button {
-
-    right:
-      18px;
-
-    bottom:
-      165px;
-
-  }
-
-  .ai-chat-panel {
-
-    right:
-      16px;
-
-    bottom:
-      16px;
-
-    width:
-      370px;
-
-    height:
-      600px;
-
-    max-height:
-      calc(100vh - 32px);
-
-  }
-
-}
-
-
-/* =========================================================
    MOBILE
    ---------------------------------------------------------
-   Chuyển Chatbox thành Bottom Sheet
-   ---------------------------------------------------------
-   FIX:
-   - Chatbox không tự nở khi focus ô nhập
-   - Không dùng dvh cho kích thước panel
-   - Input không làm panel tăng chiều cao
-   - Message area là vùng duy nhất co giãn
+   MỤC TIÊU:
+   - Chatbox không tự nở khi focus textarea
+   - Bàn phím mobile không làm textarea đẩy panel
+   - Panel giữ chiều cao ổn định
+   - Chỉ vùng message được co giãn
+   - Input luôn cố định chiều cao
+   - Nút gửi không bị co hoặc đẩy ra ngoài
    - Hỗ trợ safe-area iPhone
    ========================================================= */
 
@@ -1586,19 +1334,23 @@
 
   .ai-chat-floating-button {
 
+    position: fixed;
+
     right: 16px;
     bottom: 105px;
 
     width: 54px;
     height: 54px;
 
+    padding: 0;
+
     z-index: 3000;
+
+    box-sizing: border-box;
 
     box-shadow:
       0 4px 14px rgba(0, 0, 0, 0.28),
       0 0 0 2px rgba(255, 255, 255, 0.90);
-
-    flex-shrink: 0;
 
   }
 
@@ -1624,13 +1376,12 @@
 
 
   /* =======================================================
-     PANEL
+     CHAT PANEL
      -------------------------------------------------------
      QUAN TRỌNG:
-     Không sử dụng 72dvh.
-     
-     vh giữ kích thước panel ổn định hơn khi bàn phím
-     mobile xuất hiện.
+     Không dùng dvh.
+     Không dùng auto height.
+     Không để flex tự thay đổi chiều cao panel.
      ======================================================= */
 
   .ai-chat-panel {
@@ -1645,7 +1396,7 @@
       calc(100vw - 20px) !important;
 
     /*
-     * Kích thước cố định theo viewport.
+     * Giữ panel ổn định khi keyboard xuất hiện.
      */
     height:
       72vh !important;
@@ -1657,7 +1408,8 @@
       72vh !important;
 
     /*
-     * Không cho flex layout làm thay đổi panel.
+     * Panel không tham gia co giãn theo flex
+     * của phần tử cha.
      */
     flex:
       none !important;
@@ -1671,11 +1423,11 @@
     overflow:
       hidden !important;
 
-    border-radius:
-      16px;
-
     box-sizing:
       border-box !important;
+
+    border-radius:
+      16px;
 
     z-index:
       3001;
@@ -1713,6 +1465,9 @@
     box-sizing:
       border-box;
 
+    flex-shrink:
+      0 !important;
+
   }
 
 
@@ -1735,27 +1490,65 @@
     height:
       38px;
 
+    min-width:
+      38px;
+
+    min-height:
+      38px;
+
     font-size:
       20px;
 
     flex:
-      0 0 auto;
+      0 0 38px;
 
   }
 
 
   .ai-chat-title {
 
+    min-width:
+      0;
+
     font-size:
       14px;
+
+    overflow:
+      hidden;
+
+    text-overflow:
+      ellipsis;
+
+    white-space:
+      nowrap;
 
   }
 
 
   .ai-chat-status {
 
+    min-width:
+      0;
+
     font-size:
       10px;
+
+    overflow:
+      hidden;
+
+    text-overflow:
+      ellipsis;
+
+  }
+
+
+  .ai-chat-header-actions {
+
+    flex:
+      0 0 auto;
+
+    margin-left:
+      6px;
 
   }
 
@@ -1765,20 +1558,26 @@
     width:
       36px;
 
-    height:
+    min-width:
       36px;
 
-    min-width:
+    max-width:
+      36px;
+
+    height:
       36px;
 
     min-height:
       36px;
 
-    font-size:
-      21px;
+    max-height:
+      36px;
 
     flex:
       0 0 36px;
+
+    font-size:
+      21px;
 
   }
 
@@ -1807,6 +1606,9 @@
     overflow:
       hidden;
 
+    flex-shrink:
+      0 !important;
+
   }
 
 
@@ -1822,6 +1624,9 @@
 
     margin-top:
       2px;
+
+    min-width:
+      0;
 
     font-size:
       11px;
@@ -1841,7 +1646,7 @@
   /* =======================================================
      MESSAGE AREA
      -------------------------------------------------------
-     Đây là vùng DUY NHẤT được phép co giãn.
+     ĐÂY LÀ VÙNG DUY NHẤT ĐƯỢC PHÉP CO GIÃN.
      ======================================================= */
 
   .ai-chat-messages {
@@ -1852,9 +1657,6 @@
     width:
       100%;
 
-    /*
-     * Rất quan trọng với flex column.
-     */
     height:
       0 !important;
 
@@ -1867,14 +1669,17 @@
     padding:
       13px 10px;
 
-    overflow-y:
-      auto !important;
+    box-sizing:
+      border-box;
 
     overflow-x:
       hidden !important;
 
-    box-sizing:
-      border-box;
+    overflow-y:
+      auto !important;
+
+    flex-shrink:
+      1 !important;
 
     -webkit-overflow-scrolling:
       touch;
@@ -1908,11 +1713,17 @@
     height:
       28px;
 
-    font-size:
-      14px;
+    min-width:
+      28px;
+
+    min-height:
+      28px;
 
     flex:
       0 0 28px;
+
+    font-size:
+      14px;
 
   }
 
@@ -1976,6 +1787,9 @@
 
   .ai-suggested-button {
 
+    width:
+      100%;
+
     min-height:
       36px;
 
@@ -1991,16 +1805,19 @@
     line-height:
       1.35;
 
+    box-sizing:
+      border-box;
+
   }
 
 
   /* =======================================================
      INPUT WRAPPER
      -------------------------------------------------------
-     KHÓA CHIỀU CAO.
+     KHÓA CỨNG CHIỀU CAO.
      
-     Textarea sẽ scroll bên trong, không đẩy wrapper
-     và không làm panel nở.
+     Keyboard / focus / textarea không được phép
+     làm wrapper tăng chiều cao.
      ======================================================= */
 
   .ai-chat-input-wrapper {
@@ -2035,14 +1852,26 @@
     flex-shrink:
       0 !important;
 
+    align-items:
+      center;
+
   }
 
 
   /* =======================================================
-     TEXT INPUT
+     TEXTAREA
+     -------------------------------------------------------
+     KHÓA CỨNG 42px.
+     
+     Không auto-grow.
+     Không resize.
+     Nội dung dài -> scroll bên trong.
      ======================================================= */
 
   .ai-chat-input {
+
+    display:
+      block;
 
     flex:
       1 1 auto !important;
@@ -2056,9 +1885,9 @@
     max-width:
       none !important;
 
-    /*
-     * KHÓA CHIỀU CAO.
-     */
+    width:
+      calc(100% - 48px) !important;
+
     height:
       42px !important;
 
@@ -2067,12 +1896,6 @@
 
     max-height:
       42px !important;
-
-    /*
-     * Không cho user kéo textarea.
-     */
-    resize:
-      none !important;
 
     padding:
       10px 11px;
@@ -2086,24 +1909,27 @@
     line-height:
       1.4;
 
+    resize:
+      none !important;
+
     box-sizing:
       border-box;
 
-    /*
-     * Nội dung dài sẽ cuộn bên trong.
-     */
     overflow-x:
       hidden !important;
 
     overflow-y:
       auto !important;
 
+    flex-shrink:
+      1 !important;
+
   }
 
 
   /* =======================================================
      SEND BUTTON
-     ======================================================= */
+     ------------------------------------------------------- */
 
   .ai-chat-send-button {
 
@@ -2128,9 +1954,6 @@
     max-height:
       42px !important;
 
-    flex-shrink:
-      0 !important;
-
     padding:
       0;
 
@@ -2146,22 +1969,21 @@
     box-sizing:
       border-box;
 
+    flex-shrink:
+      0 !important;
+
   }
 
 }
 
 
 /* =========================================================
-   MOBILE VERY SMALL
+   VERY SMALL MOBILE
    ---------------------------------------------------------
    <= 380px
    ========================================================= */
 
 @media (max-width: 380px) {
-
-  /* -------------------------------------------------------
-     PANEL
-     ------------------------------------------------------- */
 
   .ai-chat-panel {
 
@@ -2192,9 +2014,7 @@
   }
 
 
-  /* -------------------------------------------------------
-     HEADER
-     ------------------------------------------------------- */
+  /* HEADER */
 
   .ai-chat-header {
 
@@ -2224,6 +2044,15 @@
     height:
       34px;
 
+    min-width:
+      34px;
+
+    min-height:
+      34px;
+
+    flex:
+      0 0 34px;
+
     font-size:
       17px;
 
@@ -2251,13 +2080,19 @@
     width:
       32px;
 
-    height:
-      32px;
-
     min-width:
       32px;
 
+    max-width:
+      32px;
+
+    height:
+      32px;
+
     min-height:
+      32px;
+
+    max-height:
       32px;
 
     flex:
@@ -2266,9 +2101,7 @@
   }
 
 
-  /* -------------------------------------------------------
-     MESSAGE
-     ------------------------------------------------------- */
+  /* MESSAGE */
 
   .ai-message-bubble {
 
@@ -2289,9 +2122,7 @@
   }
 
 
-  /* -------------------------------------------------------
-     INPUT
-     ------------------------------------------------------- */
+  /* INPUT */
 
   .ai-chat-input-wrapper {
 
@@ -2317,6 +2148,9 @@
 
 
   .ai-chat-input {
+
+    width:
+      calc(100% - 45px) !important;
 
     height:
       40px !important;
@@ -2368,9 +2202,7 @@
   }
 
 
-  /* -------------------------------------------------------
-     FLOATING BUTTON
-     ------------------------------------------------------- */
+  /* FLOATING BUTTON */
 
   .ai-chat-floating-button {
 
@@ -2413,9 +2245,6 @@
     width:
       min(420px, calc(100vw - 16px)) !important;
 
-    /*
-     * Landscape dùng vh thay vì dvh.
-     */
     height:
       calc(100vh - 16px) !important;
 
@@ -2462,9 +2291,10 @@
 
 
 /* =========================================================
-   SAFE AREA - iPHONE / MOBILE
+   SAFE AREA - iPHONE
    ---------------------------------------------------------
-   Safe area KHÔNG được làm panel tăng chiều cao.
+   Safe-area nằm bên trong wrapper.
+   Không cộng thêm chiều cao panel.
    ========================================================= */
 
 @supports (padding: env(safe-area-inset-bottom)) {
@@ -2472,15 +2302,6 @@
   @media (max-width: 600px) {
 
     .ai-chat-input-wrapper {
-
-      /*
-       * Không dùng:
-       *
-       * padding-bottom:
-       * calc(8px + env(...));
-       *
-       * vì nó làm tổng chiều cao wrapper tăng.
-       */
 
       padding-bottom:
         max(
