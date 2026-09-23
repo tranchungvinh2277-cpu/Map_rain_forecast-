@@ -1077,12 +1077,19 @@
 
 }
 
-
 /* =========================================================
    INPUT AREA
+   ---------------------------------------------------------
+   FIX:
+   - Input tự co theo chiều rộng chatbox
+   - Không đẩy nút gửi ra ngoài màn hình
+   - Nút gửi luôn hiển thị đầy đủ
    ========================================================= */
 
 .ai-chat-input-wrapper {
+
+  width: 100%;
+  max-width: 100%;
 
   padding:
     10px;
@@ -1108,6 +1115,9 @@
   box-sizing:
     border-box;
 
+  overflow:
+    hidden;
+
 }
 
 
@@ -1117,11 +1127,25 @@
 
 .ai-chat-input {
 
+  display:
+    block;
+
   flex:
-    1;
+    1 1 auto;
+
+  /*
+   * Quan trọng:
+   * width: 0 buộc textarea lấy phần chiều rộng
+   * còn lại trong flex container.
+   */
+  width:
+    0;
 
   min-width:
     0;
+
+  max-width:
+    100%;
 
   min-height:
     40px;
@@ -1161,6 +1185,12 @@
 
   box-sizing:
     border-box;
+
+  overflow-x:
+    hidden;
+
+  overflow-y:
+    auto;
 
   transition:
     border-color 0.15s ease,
@@ -1212,16 +1242,43 @@
 
 .ai-chat-send-button {
 
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  /*
+   * Không cho nút gửi co lại.
+   */
   flex:
-    0 0 auto;
+    0 0 40px;
 
   width:
+    40px;
+
+  min-width:
+    40px;
+
+  max-width:
     40px;
 
   height:
     40px;
 
+  min-height:
+    40px;
+
+  max-height:
+    40px;
+
   padding:
+    0;
+
+  margin:
     0;
 
   border:
@@ -1245,14 +1302,11 @@
   cursor:
     pointer;
 
-  display:
-    flex;
+  box-sizing:
+    border-box;
 
-  align-items:
-    center;
-
-  justify-content:
-    center;
+  flex-shrink:
+    0;
 
   transition:
     background 0.15s ease,
@@ -1293,6 +1347,200 @@
 
   cursor:
     default;
+
+}
+
+
+/* =========================================================
+   MOBILE INPUT FIX
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .ai-chat-input-wrapper {
+
+    width:
+      100%;
+
+    max-width:
+      100%;
+
+    padding:
+      8px 9px;
+
+    gap:
+      6px;
+
+    box-sizing:
+      border-box;
+
+    overflow:
+      hidden;
+
+  }
+
+
+  .ai-chat-input {
+
+    flex:
+      1 1 auto;
+
+    width:
+      0;
+
+    min-width:
+      0;
+
+    /*
+     * Chatbox có padding + gap + nút gửi.
+     * Input chỉ được sử dụng phần còn lại.
+     */
+    max-width:
+      calc(100% - 48px);
+
+    min-height:
+      42px;
+
+    max-height:
+      110px;
+
+    padding:
+      10px 11px;
+
+    border-radius:
+      11px;
+
+    font-size:
+      13px;
+
+    box-sizing:
+      border-box;
+
+  }
+
+
+  .ai-chat-send-button {
+
+    flex:
+      0 0 42px;
+
+    width:
+      42px;
+
+    min-width:
+      42px;
+
+    max-width:
+      42px;
+
+    height:
+      42px;
+
+    min-height:
+      42px;
+
+    max-height:
+      42px;
+
+    padding:
+      0;
+
+    margin:
+      0;
+
+    border-radius:
+      11px;
+
+    font-size:
+      17px;
+
+    flex-shrink:
+      0;
+
+    box-sizing:
+      border-box;
+
+  }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .ai-chat-input-wrapper {
+
+    padding:
+      7px 8px;
+
+    gap:
+      5px;
+
+  }
+
+
+  .ai-chat-input {
+
+    flex:
+      1 1 auto;
+
+    width:
+      0;
+
+    min-width:
+      0;
+
+    max-width:
+      calc(100% - 45px);
+
+    min-height:
+      40px;
+
+    max-height:
+      100px;
+
+    padding:
+      9px 10px;
+
+    font-size:
+      12px;
+
+  }
+
+
+  .ai-chat-send-button {
+
+    flex:
+      0 0 40px;
+
+    width:
+      40px;
+
+    min-width:
+      40px;
+
+    max-width:
+      40px;
+
+    height:
+      40px;
+
+    min-height:
+      40px;
+
+    max-height:
+      40px;
+
+    border-radius:
+      10px;
+
+    font-size:
+      16px;
+
+  }
 
 }
 
