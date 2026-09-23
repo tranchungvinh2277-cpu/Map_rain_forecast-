@@ -1424,35 +1424,26 @@
      PANEL
      ------------------------------------------------------- */
 
+
   .ai-chat-panel {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
 
-    left:
-      8px;
+    width: auto;
 
-    right:
-      8px;
+    /* Không chiếm toàn bộ màn hình */
+    height: 72dvh;
+    max-height: 72dvh;
 
-    bottom:
-      8px;
+    min-height: 420px;
 
-    width:
-      auto;
+    border-radius: 16px;
 
-    height:
-      calc(100dvh - 16px);
-
-    max-height:
-      calc(100dvh - 16px);
-
-    border-radius:
-      18px;
-
-    z-index:
-      3001;
+    z-index: 3001;
 
     box-shadow:
-      0 8px 35px rgba(0, 0, 0, 0.30);
-
+      0 8px 30px rgba(0, 0, 0, 0.28);
   }
 
 
@@ -1753,117 +1744,58 @@
 
 @media (max-width: 380px) {
 
-
   .ai-chat-panel {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
 
-    left:
-      5px;
+    height: 70dvh;
+    max-height: 70dvh;
 
-    right:
-      5px;
+    min-height: 380px;
 
-    bottom:
-      5px;
-
-    height:
-      calc(100dvh - 10px);
-
-    max-height:
-      calc(100dvh - 10px);
-
-    border-radius:
-      15px;
-
+    border-radius: 14px;
   }
-
 
   .ai-chat-header {
-
-    min-height:
-      58px;
-
-    padding:
-      8px 10px;
-
+    min-height: 56px;
+    padding: 8px 10px;
   }
-
 
   .ai-chat-avatar {
-
-    width:
-      35px;
-
-    height:
-      35px;
-
-    font-size:
-      18px;
-
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
   }
-
 
   .ai-chat-title {
-
-    font-size:
-      13px;
-
+    font-size: 13px;
   }
-
 
   .ai-chat-status {
-
-    font-size:
-      9px;
-
+    font-size: 9px;
   }
-
 
   .ai-chat-header-button {
-
-    width:
-      32px;
-
-    height:
-      32px;
-
+    width: 32px;
+    height: 32px;
   }
-
 
   .ai-message-bubble {
-
-    max-width:
-      90%;
-
-    font-size:
-      12px;
-
+    max-width: 90%;
+    font-size: 12px;
   }
-
 
   .ai-suggested-button {
-
-    font-size:
-      10px;
-
+    font-size: 10px;
   }
-
 
   .ai-chat-floating-button {
-
-    right:
-      14px;
-
-    bottom:
-      95px;
-
-    width:
-      52px;
-
-    height:
-      52px;
-
+    right: 14px;
+    bottom: 95px;
+    width: 52px;
+    height: 52px;
   }
-
 }
 
 
