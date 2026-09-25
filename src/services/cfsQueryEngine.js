@@ -1384,7 +1384,139 @@ export async function summarizeCFSProvince(
     };
 }
 
+// ==========================================================
+// 16-1 FORMAT CFS PROVINCE ANSWER
+// ==========================================================
 
+export function formatCFSProvinceAnswer(
+    result
+) {
+
+    if (
+        !result ||
+        !result.province ||
+        !Array.isArray(result.months)
+    ) {
+
+        return (
+            "Không có dữ liệu CFS."
+        );
+
+    }
+
+
+    const validMonths =
+        result.months.filter(
+            month =>
+                month &&
+                Number.isFinite(
+                    month.mean
+                )
+        );
+
+
+    if (
+        !validMonths.length
+    ) {
+
+        return (
+            `Không có dữ liệu CFS cho ${result.province}.`
+        );
+
+    }
+
+
+    const lines = [];
+
+
+    lines.push(
+        `Dự báo mưa CFS theo tháng tại ${result.province}:`
+    );
+
+    lines.push("");
+
+
+    lines.push(
+        `• Số trạm phân tích: ${result.stationCount ?? 0}`
+    );
+
+    lines.push("");
+
+
+    validMonths.forEach(
+        month => {
+
+            lines.push(
+                `${month.label || month.month}:`
+            );
+
+
+            lines.push(
+                `• Mưa trung bình: ${
+                    Number(
+                        month.mean
+                    ).toFixed(2)
+                } mm`
+            );
+
+
+            if (
+                month.max &&
+                Number.isFinite(
+                    month.max.value
+                )
+            ) {
+
+                lines.push(
+                    `• Lớn nhất: ${
+                        Number(
+                            month.max.value
+                        ).toFixed(2)
+                    } mm` +
+                    (
+                        month.max.stationName
+                            ? ` tại ${month.max.stationName}`
+                            : ""
+                    )
+                );
+
+            }
+
+
+            if (
+                month.min &&
+                Number.isFinite(
+                    month.min.value
+                )
+            ) {
+
+                lines.push(
+                    `• Nhỏ nhất: ${
+                        Number(
+                            month.min.value
+                        ).toFixed(2)
+                    } mm` +
+                    (
+                        month.min.stationName
+                            ? ` tại ${month.min.stationName}`
+                            : ""
+                    )
+                );
+
+            }
+
+
+            lines.push("");
+
+        }
+    );
+
+
+    return lines
+        .join("\n")
+        .trim();
+
+}
 // ==========================================================
 // 17. HAVERSINE DISTANCE
 // ==========================================================
@@ -2345,6 +2477,784 @@ export function isCFSAreaQuestion(
     );
 }
 
+// ==========================================================
+// 25-1 CFS PROVINCE HELPERS
+// ==========================================================
+
+function normalizeProvinceName(value) {
+
+    return normalizeText(
+        String(value || "")
+    )
+        .replace(/^tinh\s+/, "")
+        .replace(/^thanh pho\s+/, "")
+        .trim();
+}
+
+
+// ==========================================================
+// 25-2 DETECT PROVINCE QUESTION
+// ==========================================================
+
+export function isCFSProvinceQuestion(question) {
+
+    const q = normalizeText(
+        question
+    );
+
+    // Các mẫu hỏi rõ theo tỉnh
+    if (
+        q.includes("theo tinh") ||
+        q.includes("tai tinh") ||
+        q.includes("o tinh") ||
+        q.includes("tinh nao") ||
+        q.includes("khu vuc tinh") ||
+        q.includes("toan tinh")
+    ) {
+
+        return true;
+    }
+
+    // Nếu câu hỏi bắt đầu bằng "tỉnh ..."
+    if (
+        /^tinh\s+/.test(q)
+    ) {
+
+        return true;
+    }
+
+    // Các tên tỉnh thường gặp
+    const provinces = [
+        "ha noi",
+        "hai phong",
+        "quang ninh",
+        "bac ninh",
+        "hung yen",
+        "hai duong",
+        "thai binh",
+        "nam dinh",
+        "ninh binh",
+        "ha nam",
+        "hoa binh",
+        "son la",
+        "dien bien",
+        "lai chau",
+        "lao cai",
+        "yen bai",
+        "tuyen quang",
+        "ha giang",
+        "cao bang",
+        "bac kan",
+        "lang son",
+        "thai nguyen",
+        "phu tho",
+        "vinh phuc",
+        "bac giang",
+        "thanh hoa",
+        "nghe an",
+        "ha tinh",
+        "quang binh",
+        "quang tri",
+        "thua thien hue",
+        "da nang",
+        "quang nam",
+        "quang ngai",
+        "binh dinh",
+        "phu yen",
+        "khanh hoa",
+        "ninh thuan",
+        "binh thuan",
+        "kon tum",
+        "gia lai",
+        "dak lak",
+        "dak nong",
+        "lam dong",
+        "binh phuoc",
+        "tay ninh",
+        "binh duong",
+        "dong nai",
+        "ba ria vung tau",
+        "ho chi minh",
+        "long an",
+        "tien giang",
+        "ben tre",
+        "tra vinh",
+        "vinh long",
+        "dong thap",
+        "an giang",
+        "kien giang",
+        "can tho",
+        "hau giang",
+        "soc trang",
+        "bac lieu",
+        "ca mau"
+    ];
+
+    return provinces.some(
+        province =>
+            q.includes(province)
+    );
+}
+
+
+// ==========================================================
+// 25-3 EXTRACT CFS PROVINCE FROM QUESTION
+// ==========================================================
+//
+// MỤC ĐÍCH:
+//   Người dùng có thể hỏi:
+//      - Hà Tĩnh
+//      - ha tinh
+//      - Hà Nội
+//      - Hanoi
+//      - Thủ đô Hà Nội
+//      - TP HCM
+//      - Hồ Chí Minh
+//
+//   → trả về đúng tên tỉnh dùng trong tramList.json
+//
+// QUAN TRỌNG:
+//   Không sử dụng mapContext ở đây.
+//   Hàm này chỉ xác định tỉnh mà NGƯỜI DÙNG NÊU TRONG CÂU HỎI.
+//
+// ==========================================================
+
+export function extractCFSProvince(
+    question
+) {
+
+    const q =
+        normalizeText(
+            question
+        );
+
+
+    // ======================================================
+    // TÊN NGƯỜI DÙNG CÓ THỂ GỌI
+    // →
+    // TÊN TỈNH THỰC TẾ TRONG tramList.json
+    // ======================================================
+
+    const provinceAliases = [
+
+        {
+            aliases: [
+                "an giang"
+            ],
+            province:
+                "An Giang"
+        },
+
+        {
+            aliases: [
+                "bac ninh"
+            ],
+            province:
+                "Bắc Ninh"
+        },
+
+        {
+            aliases: [
+                "bac giang"
+            ],
+            province:
+                "Bắc Giang"
+        },
+
+        {
+            aliases: [
+                "bac kan",
+                "bac can"
+            ],
+            province:
+                "Bắc Kạn"
+        },
+
+        {
+            aliases: [
+                "bac lieu"
+            ],
+            province:
+                "Bạc Liêu"
+        },
+
+        {
+            aliases: [
+                "ben tre"
+            ],
+            province:
+                "Bến Tre"
+        },
+
+        {
+            aliases: [
+                "binh duong"
+            ],
+            province:
+                "Bình Dương"
+        },
+
+        {
+            aliases: [
+                "binh dinh"
+            ],
+            province:
+                "Bình Định"
+        },
+
+        {
+            aliases: [
+                "binh phuoc"
+            ],
+            province:
+                "Bình Phước"
+        },
+
+        {
+            aliases: [
+                "binh thuan"
+            ],
+            province:
+                "Bình Thuận"
+        },
+
+        {
+            aliases: [
+                "ca mau"
+            ],
+            province:
+                "Cà Mau"
+        },
+
+        {
+            aliases: [
+                "can tho"
+            ],
+            province:
+                "Cần Thơ"
+        },
+
+        {
+            aliases: [
+                "cao bang"
+            ],
+            province:
+                "Cao Bằng"
+        },
+
+        {
+            aliases: [
+                "da nang"
+            ],
+            province:
+                "Đà Nẵng"
+        },
+
+        {
+            aliases: [
+                "dak lak",
+                "dac lac"
+            ],
+            province:
+                "Đắk Lắk"
+        },
+
+        {
+            aliases: [
+                "dak nong"
+            ],
+            province:
+                "Đắk Nông"
+        },
+
+        {
+            aliases: [
+                "dien bien"
+            ],
+            province:
+                "Điện Biên"
+        },
+
+        {
+            aliases: [
+                "dong nai"
+            ],
+            province:
+                "Đồng Nai"
+        },
+
+        {
+            aliases: [
+                "dong thap"
+            ],
+            province:
+                "Đồng Tháp"
+        },
+
+        {
+            aliases: [
+                "gia lai"
+            ],
+            province:
+                "Gia Lai"
+        },
+
+        {
+            aliases: [
+                "ha giang"
+            ],
+            province:
+                "Hà Giang"
+        },
+
+        {
+            aliases: [
+                "ha nam"
+            ],
+            province:
+                "Hà Nam"
+        },
+
+        // ==================================================
+        // HÀ NỘI
+        // ==================================================
+
+        {
+            aliases: [
+                "ha noi",
+                "thu do ha noi",
+                "hanoi"
+            ],
+            province:
+                "Thủ đô Hà Nội"
+        },
+
+        {
+            aliases: [
+                "ha tinh"
+            ],
+            province:
+                "Hà Tĩnh"
+        },
+
+        {
+            aliases: [
+                "hai duong"
+            ],
+            province:
+                "Hải Dương"
+        },
+
+        {
+            aliases: [
+                "hai phong"
+            ],
+            province:
+                "Hải Phòng"
+        },
+
+        {
+            aliases: [
+                "hau giang"
+            ],
+            province:
+                "Hậu Giang"
+        },
+
+        {
+            aliases: [
+                "hoa binh"
+            ],
+            province:
+                "Hòa Bình"
+        },
+
+        {
+            aliases: [
+                "hung yen"
+            ],
+            province:
+                "Hưng Yên"
+        },
+
+        {
+            aliases: [
+                "khanh hoa"
+            ],
+            province:
+                "Khánh Hòa"
+        },
+
+        {
+            aliases: [
+                "kien giang"
+            ],
+            province:
+                "Kiên Giang"
+        },
+
+        {
+            aliases: [
+                "kon tum"
+            ],
+            province:
+                "Kon Tum"
+        },
+
+        {
+            aliases: [
+                "lai chau"
+            ],
+            province:
+                "Lai Châu"
+        },
+
+        {
+            aliases: [
+                "lam dong"
+            ],
+            province:
+                "Lâm Đồng"
+        },
+
+        {
+            aliases: [
+                "lang son"
+            ],
+            province:
+                "Lạng Sơn"
+        },
+
+        {
+            aliases: [
+                "lao cai"
+            ],
+            province:
+                "Lào Cai"
+        },
+
+        {
+            aliases: [
+                "long an"
+            ],
+            province:
+                "Long An"
+        },
+
+        {
+            aliases: [
+                "nam dinh"
+            ],
+            province:
+                "Nam Định"
+        },
+
+        {
+            aliases: [
+                "nghe an"
+            ],
+            province:
+                "Nghệ An"
+        },
+
+        {
+            aliases: [
+                "ninh binh"
+            ],
+            province:
+                "Ninh Bình"
+        },
+
+        {
+            aliases: [
+                "ninh thuan"
+            ],
+            province:
+                "Ninh Thuận"
+        },
+
+        {
+            aliases: [
+                "phu tho"
+            ],
+            province:
+                "Phú Thọ"
+        },
+
+        {
+            aliases: [
+                "phu yen"
+            ],
+            province:
+                "Phú Yên"
+        },
+
+        {
+            aliases: [
+                "quang binh"
+            ],
+            province:
+                "Quảng Bình"
+        },
+
+        {
+            aliases: [
+                "quang nam"
+            ],
+            province:
+                "Quảng Nam"
+        },
+
+        {
+            aliases: [
+                "quang ngai"
+            ],
+            province:
+                "Quảng Ngãi"
+        },
+
+        {
+            aliases: [
+                "quang ninh"
+            ],
+            province:
+                "Quảng Ninh"
+        },
+
+        {
+            aliases: [
+                "quang tri"
+            ],
+            province:
+                "Quảng Trị"
+        },
+
+        {
+            aliases: [
+                "soc trang"
+            ],
+            province:
+                "Sóc Trăng"
+        },
+
+        {
+            aliases: [
+                "son la"
+            ],
+            province:
+                "Sơn La"
+        },
+
+        {
+            aliases: [
+                "tay ninh"
+            ],
+            province:
+                "Tây Ninh"
+        },
+
+        {
+            aliases: [
+                "thai binh"
+            ],
+            province:
+                "Thái Bình"
+        },
+
+        {
+            aliases: [
+                "thai nguyen"
+            ],
+            province:
+                "Thái Nguyên"
+        },
+
+        {
+            aliases: [
+                "thanh hoa"
+            ],
+            province:
+                "Thanh Hóa"
+        },
+
+        // ==================================================
+        // HUẾ
+        // ==================================================
+
+        {
+            aliases: [
+                "thua thien hue",
+                "hue"
+            ],
+            province:
+                "Huế"
+        },
+
+        {
+            aliases: [
+                "tien giang"
+            ],
+            province:
+                "Tiền Giang"
+        },
+
+        {
+            aliases: [
+                "tra vinh"
+            ],
+            province:
+                "Trà Vinh"
+        },
+
+        {
+            aliases: [
+                "tuyen quang"
+            ],
+            province:
+                "Tuyên Quang"
+        },
+
+        {
+            aliases: [
+                "vinh long"
+            ],
+            province:
+                "Vĩnh Long"
+        },
+
+        {
+            aliases: [
+                "vinh phuc"
+            ],
+            province:
+                "Vĩnh Phúc"
+        },
+
+        {
+            aliases: [
+                "yen bai"
+            ],
+            province:
+                "Yên Bái"
+        },
+
+        // ==================================================
+        // HỒ CHÍ MINH
+        // ==================================================
+
+        {
+            aliases: [
+                "ho chi minh",
+                "tphcm",
+                "tp hcm"
+            ],
+            province:
+                "Hồ Chí Minh"
+        },
+
+        // ==================================================
+        // BÀ RỊA - VŨNG TÀU
+        // ==================================================
+
+        {
+            aliases: [
+                "ba ria vung tau",
+                "ba ria - vung tau"
+            ],
+            province:
+                "Bà Rịa - Vũng Tàu"
+        }
+    ];
+
+
+    // ======================================================
+    // ƯU TIÊN ALIAS DÀI TRƯỚC
+    // ======================================================
+    //
+    // Ví dụ:
+    //
+    // "thu do ha noi"
+    //
+    // phải được xét trước "ha noi".
+    //
+    // ======================================================
+
+    const sortedAliases =
+        [...provinceAliases].sort(
+            (
+                a,
+                b
+            ) => {
+
+                const maxA =
+                    Math.max(
+                        ...a.aliases.map(
+                            alias =>
+                                normalizeText(
+                                    alias
+                                ).length
+                        )
+                    );
+
+                const maxB =
+                    Math.max(
+                        ...b.aliases.map(
+                            alias =>
+                                normalizeText(
+                                    alias
+                                ).length
+                        )
+                    );
+
+                return maxB - maxA;
+            }
+        );
+
+
+    // ======================================================
+    // TÌM TỈNH
+    // ======================================================
+
+    for (
+        const item of sortedAliases
+    ) {
+
+        for (
+            const alias of item.aliases
+        ) {
+
+            const normalizedAlias =
+                normalizeText(
+                    alias
+                );
+
+
+            if (
+                q.includes(
+                    normalizedAlias
+                )
+            ) {
+
+                console.log(
+                    "[CFS] PROVINCE DETECTED:",
+                    item.province,
+                    "<-",
+                    alias
+                );
+
+                return item.province;
+            }
+        }
+    }
+
+
+    // ======================================================
+    // KHÔNG TÌM THẤY
+    // ======================================================
+
+    return null;
+}
+
 
 // ==========================================================
 // 25. DETECT CFS INTENT
@@ -2359,6 +3269,36 @@ export function detectCFSIntent(
             question
         );
 
+
+    // ======================================================
+    // PROVINCE
+    // ======================================================
+    //
+    // Phải kiểm tra trước MONTH / TOTAL / MEAN.
+    //
+    // Ví dụ:
+    //
+    // "Hà Tĩnh tháng 8 mưa bao nhiêu?"
+    //
+    // → CFS_PROVINCE
+    //
+    // Không được thành CFS_MONTH.
+    //
+    // ======================================================
+
+    if (
+        isCFSProvinceQuestion(
+            question
+        )
+    ) {
+
+        return "CFS_PROVINCE";
+    }
+
+
+    // ======================================================
+    // MAX MONTH
+    // ======================================================
 
     const asksMaxMonth =
         (
@@ -2403,6 +3343,10 @@ export function detectCFSIntent(
     }
 
 
+    // ======================================================
+    // TOTAL
+    // ======================================================
+
     if (
         q.includes("tong mua") ||
         q.includes("tong luong mua") ||
@@ -2414,6 +3358,10 @@ export function detectCFSIntent(
     }
 
 
+    // ======================================================
+    // MEAN
+    // ======================================================
+
     if (
         q.includes("trung binh") ||
         q.includes("mua trung binh") ||
@@ -2424,8 +3372,14 @@ export function detectCFSIntent(
     }
 
 
+    // ======================================================
+    // ONE MONTH
+    // ======================================================
+
     if (
-        extractMonth(question) ||
+        extractMonth(
+            question
+        ) ||
         (
             /thang\s+(0?[1-9]|1[0-2])\b/.test(q) &&
             !q.includes("thang nao")
@@ -2436,8 +3390,14 @@ export function detectCFSIntent(
     }
 
 
+    // ======================================================
+    // PERIOD
+    // ======================================================
+
     if (
-        extractMonths(question) ||
+        extractMonths(
+            question
+        ) ||
         q.includes("cac thang") ||
         q.includes("nhung thang") ||
         q.includes("thang toi") ||
@@ -2452,9 +3412,12 @@ export function detectCFSIntent(
     }
 
 
+    // ======================================================
+    // SUMMARY
+    // ======================================================
+
     return "CFS_SUMMARY";
 }
-
 
 // ==========================================================
 // 26. GET PERIOD FROM SERIES
@@ -2799,6 +3762,606 @@ async function queryCFSArea(
     };
 }
 
+// ==========================================================
+// 27.5 QUERY PROVINCE
+// ==========================================================
+
+async function queryCFSProvince(
+    provinceName,
+    question,
+    intent
+) {
+
+    const data =
+        await loadCFSData();
+
+
+    if (
+        !Array.isArray(data) ||
+        !data.length
+    ) {
+
+        return {
+
+            success: false,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            message:
+                "Không có dữ liệu CFS để phân tích tỉnh."
+        };
+    }
+
+
+    // ======================================================
+    // NORMALIZE PROVINCE
+    // ======================================================
+
+    const targetProvince =
+        normalizeProvinceName(
+            provinceName
+        );
+
+
+    // ======================================================
+    // FILTER STATIONS
+    // ======================================================
+
+    const provinceStations =
+        data.filter(
+            station => {
+
+                const stationProvince =
+                    normalizeProvinceName(
+                        station?.Tinh
+                    );
+
+                return (
+                    stationProvince ===
+                    targetProvince
+                );
+            }
+        );
+
+
+    if (
+        !provinceStations.length
+    ) {
+
+        return {
+
+            success: false,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            message:
+                `Không tìm thấy trạm CFS nào thuộc tỉnh ${provinceName}.`
+        };
+    }
+
+
+    // ======================================================
+    // BUILD MONTHLY DATA
+    // ======================================================
+
+    const monthlyMap =
+        new Map();
+
+
+    let stationCount =
+        0;
+
+
+    provinceStations.forEach(
+        station => {
+
+            const series =
+                getStationCFSMonthlySeries(
+                    station
+                );
+
+
+            if (
+                !Array.isArray(series) ||
+                !series.length
+            ) {
+
+                return;
+            }
+
+
+            stationCount++;
+
+
+            series.forEach(
+                item => {
+
+                    if (
+                        !item ||
+                        !item.month ||
+                        !Number.isFinite(
+                            item.value
+                        )
+                    ) {
+
+                        return;
+                    }
+
+
+                    if (
+                        !monthlyMap.has(
+                            item.month
+                        )
+                    ) {
+
+                        monthlyMap.set(
+                            item.month,
+                            []
+                        );
+                    }
+
+
+                    monthlyMap
+                        .get(item.month)
+                        .push(
+                            item.value
+                        );
+                }
+            );
+        }
+    );
+
+
+    // ======================================================
+    // MONTHLY PROVINCE MEAN
+    // ======================================================
+
+    const series = [];
+
+
+    monthlyMap.forEach(
+        (
+            values,
+            month
+        ) => {
+
+            if (
+                !values.length
+            ) {
+
+                return;
+            }
+
+
+            const total =
+                values.reduce(
+                    (
+                        sum,
+                        value
+                    ) =>
+                        sum + value,
+                    0
+                );
+
+
+            const mean =
+                total /
+                values.length;
+
+
+            series.push({
+
+                month,
+
+                label:
+                    formatVietnameseMonth(
+                        month
+                    ),
+
+                mean,
+
+                total,
+
+                count:
+                    values.length
+            });
+        }
+    );
+
+
+    // ======================================================
+    // SORT MONTH
+    // ======================================================
+
+    series.sort(
+        (
+            a,
+            b
+        ) => {
+
+            return String(
+                a.month
+            ).localeCompare(
+                String(b.month)
+            );
+        }
+    );
+
+
+    if (
+        !series.length
+    ) {
+
+        return {
+
+            success: false,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            stationCount,
+
+            message:
+                `Các trạm CFS thuộc ${provinceName} không có chuỗi dự báo hợp lệ.`
+        };
+    }
+
+
+    // ======================================================
+    // ONE MONTH
+    // ======================================================
+
+    if (
+        intent === "CFS_MONTH"
+    ) {
+
+        const month =
+            resolveMonthFromSeries(
+                question,
+                series
+            );
+
+
+        if (!month) {
+
+            return {
+
+                success: false,
+
+                source: "CFS",
+
+                intent,
+
+                province:
+                    provinceName,
+
+                stationCount,
+
+                series,
+
+                message:
+                    `Không xác định được tháng cần tra cứu cho tỉnh ${provinceName}.`
+            };
+        }
+
+
+        const record =
+            series.find(
+                item =>
+                    item.month ===
+                    month
+            );
+
+
+        if (!record) {
+
+            return {
+
+                success: false,
+
+                source: "CFS",
+
+                intent,
+
+                province:
+                    provinceName,
+
+                stationCount,
+
+                month,
+
+                series,
+
+                message:
+                    `Không có dữ liệu CFS cho ${formatVietnameseMonth(month)} tại tỉnh ${provinceName}.`
+            };
+        }
+
+
+        return {
+
+            success: true,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            stationCount,
+
+            month,
+
+            value:
+                record.mean,
+
+            unit: "mm",
+
+            record,
+
+            series
+        };
+    }
+
+
+    // ======================================================
+    // PERIOD
+    // ======================================================
+
+    const periodSeries =
+        getPeriodSeries(
+            series,
+            question
+        );
+
+
+    const periodValid =
+        periodSeries.filter(
+            item =>
+                Number.isFinite(
+                    item?.mean
+                )
+        );
+
+
+    if (
+        !periodValid.length
+    ) {
+
+        return {
+
+            success: false,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            stationCount,
+
+            message:
+                `Không có dữ liệu CFS hợp lệ tại tỉnh ${provinceName}.`
+        };
+    }
+
+
+    // ======================================================
+    // TOTAL
+    // ======================================================
+
+    const periodTotal =
+        periodValid.reduce(
+            (
+                sum,
+                item
+            ) =>
+                sum + item.mean,
+            0
+        );
+
+
+    // ======================================================
+    // MEAN
+    // ======================================================
+
+    const periodMean =
+        periodTotal /
+        periodValid.length;
+
+
+    // ======================================================
+    // MAX
+    // ======================================================
+
+    const periodMax =
+        periodValid.reduce(
+            (
+                a,
+                b
+            ) =>
+                b.mean > a.mean
+                    ? b
+                    : a
+        );
+
+
+    // ======================================================
+    // MIN
+    // ======================================================
+
+    const periodMin =
+        periodValid.reduce(
+            (
+                a,
+                b
+            ) =>
+                b.mean < a.mean
+                    ? b
+                    : a
+        );
+
+
+    // ======================================================
+    // MAX MONTH
+    // ======================================================
+
+    if (
+        intent ===
+        "CFS_MAX_MONTH"
+    ) {
+
+        return {
+
+            success: true,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            stationCount,
+
+            months:
+                periodValid.length,
+
+            max:
+                periodMax,
+
+            series:
+                periodValid
+        };
+    }
+
+
+    // ======================================================
+    // TOTAL
+    // ======================================================
+
+    if (
+        intent ===
+        "CFS_TOTAL"
+    ) {
+
+        return {
+
+            success: true,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            stationCount,
+
+            months:
+                periodValid.length,
+
+            total:
+                periodTotal,
+
+            mean:
+                periodMean,
+
+            series:
+                periodValid
+        };
+    }
+
+
+    // ======================================================
+    // MEAN
+    // ======================================================
+
+    if (
+        intent ===
+        "CFS_MEAN"
+    ) {
+
+        return {
+
+            success: true,
+
+            source: "CFS",
+
+            intent,
+
+            province:
+                provinceName,
+
+            stationCount,
+
+            months:
+                periodValid.length,
+
+            total:
+                periodTotal,
+
+            mean:
+                periodMean,
+
+            series:
+                periodValid
+        };
+    }
+
+
+    // ======================================================
+    // SUMMARY / PERIOD
+    // ======================================================
+
+    return {
+
+        success: true,
+
+        source: "CFS",
+
+        intent,
+
+        province:
+            provinceName,
+
+        stationCount,
+
+        months:
+            periodValid.length,
+
+        total:
+            periodTotal,
+
+        mean:
+            periodMean,
+
+        max:
+            periodMax,
+
+        min:
+            periodMin,
+
+        series:
+            periodValid
+    };
+}
 
 // ==========================================================
 // 28. QUERY ONE STATION
@@ -2832,16 +4395,33 @@ export async function queryCFSStation(
         // AREA DETECTION
         // --------------------------------------------------
 
+        const provinceQuestion =
+            isCFSProvinceQuestion(
+                question
+            );
+
+        const provinceName =
+            provinceQuestion
+                ? extractCFSProvince(
+                    question
+                )
+                : null;
+
+        console.log(
+            "[CFS] PROVINCE QUESTION:",
+            provinceQuestion
+        );
+
+        console.log(
+            "[CFS] PROVINCE:",
+            provinceName
+        );
+
+
         const areaQuestion =
             isCFSAreaQuestion(
                 question
             );
-
-
-        console.log(
-            "[CFS] AREA QUESTION:",
-            areaQuestion
-        );
 
 
         const intent =
@@ -2855,6 +4435,25 @@ export async function queryCFSStation(
             intent
         );
 
+        // --------------------------------------------------
+        // PROVINCE MODE
+        // --------------------------------------------------
+
+        if (
+            provinceQuestion &&
+            provinceName
+        ) {
+
+            console.log(
+                "[CFS] MODE: PROVINCE"
+            );
+
+            return await queryCFSProvince(
+                provinceName,
+                question,
+                intent
+            );
+        }
 
         // --------------------------------------------------
         // AREA MODE
@@ -3620,6 +5219,278 @@ export function formatCFSAnswer(
                 `(${result.stationCode})`
             );
 
+    // ======================================================
+    // PROVINCE
+    // ======================================================
+
+    if (
+        result.intent ===
+        "CFS_PROVINCE"
+    ) {
+
+        if (
+            !result.province
+        ) {
+
+            return "Không xác định được tỉnh cần tra cứu CFS.";
+        }
+
+
+        // --------------------------------------------------
+        // ONE MONTH
+        // --------------------------------------------------
+
+        if (
+            result.month
+        ) {
+
+            return (
+
+                `Dự báo CFS tại tỉnh ` +
+
+                `${result.province}, ` +
+
+                `trong ${formatVietnameseMonth(result.month)} ` +
+
+                `có lượng mưa trung bình khoảng ` +
+
+                `${formatNumber(result.value)} mm ` +
+
+                `(${result.record?.count ?? 0} trạm CFS).`
+            );
+        }
+
+
+        // --------------------------------------------------
+        // MAX MONTH
+        // --------------------------------------------------
+
+        if (
+            result.max
+        ) {
+
+            return (
+
+                `Theo dự báo CFS tại tỉnh ` +
+
+                `${result.province}, ` +
+
+                `tháng có lượng mưa trung bình lớn nhất là ` +
+
+                `${result.max.label || formatVietnameseMonth(result.max.month)}, ` +
+
+                `khoảng ` +
+
+                `${formatNumber(result.max.mean)} mm ` +
+
+                `(${result.max.count ?? 0} trạm CFS).`
+            );
+        }
+
+
+        // --------------------------------------------------
+        // TOTAL
+        // --------------------------------------------------
+
+        if (
+            result.total !== undefined &&
+            result.total !== null
+        ) {
+
+            if (
+                result.intent ===
+                "CFS_TOTAL"
+            ) {
+
+                return (
+
+                    `Theo dự báo CFS tại tỉnh ` +
+
+                    `${result.province}, ` +
+
+                    `tổng lượng mưa trung bình ` +
+
+                    `trong ${result.months} tháng ` +
+
+                    `khoảng ` +
+
+                    `${formatNumber(result.total)} mm ` +
+
+                    `(${result.stationCount} trạm CFS).`
+                );
+            }
+        }
+
+
+        // --------------------------------------------------
+        // MEAN
+        // --------------------------------------------------
+
+        if (
+            result.intent ===
+            "CFS_MEAN"
+        ) {
+
+            return (
+
+                `Lượng mưa CFS trung bình tại tỉnh ` +
+
+                `${result.province} ` +
+
+                `khoảng ` +
+
+                `${formatNumber(result.mean)} mm/tháng ` +
+
+                `trong ${result.months} tháng ` +
+
+                `(${result.stationCount} trạm CFS).`
+            );
+        }
+
+
+        // --------------------------------------------------
+        // SUMMARY / PERIOD
+        // --------------------------------------------------
+
+        const lines = [];
+
+
+        lines.push(
+
+            `Dự báo CFS tại tỉnh ` +
+
+            `${result.province}:`
+
+        );
+
+
+        lines.push(
+
+            `• Số trạm CFS phân tích: ` +
+
+            `${result.stationCount}`
+
+        );
+
+
+        if (
+            Array.isArray(
+                result.series
+            )
+        ) {
+
+            result.series.forEach(
+                item => {
+
+                    if (
+                        Number.isFinite(
+                            item?.mean
+                        )
+                    ) {
+
+                        lines.push(
+
+                            `• ${item.label || formatVietnameseMonth(item.month)}: ` +
+
+                            `${formatNumber(item.mean)} mm`
+
+                        );
+                    }
+                }
+            );
+        }
+
+
+        if (
+            Number.isFinite(
+                result.total
+            )
+        ) {
+
+            lines.push(
+
+                `• Tổng: ` +
+
+                `${formatNumber(result.total)} mm`
+
+            );
+        }
+
+
+        if (
+            Number.isFinite(
+                result.mean
+            )
+        ) {
+
+            lines.push(
+
+                `• Trung bình: ` +
+
+                `${formatNumber(result.mean)} mm/tháng`
+
+            );
+        }
+
+
+        if (
+            result.max
+        ) {
+
+            const maxValue =
+                result.max.mean;
+
+
+            if (
+                Number.isFinite(
+                    maxValue
+                )
+            ) {
+
+                lines.push(
+
+                    `• Cao nhất: ` +
+
+                    `${result.max.label || formatVietnameseMonth(result.max.month)} ` +
+
+                    `(${formatNumber(maxValue)} mm)`
+
+                );
+            }
+        }
+
+
+        if (
+            result.min
+        ) {
+
+            const minValue =
+                result.min.mean;
+
+
+            if (
+                Number.isFinite(
+                    minValue
+                )
+            ) {
+
+                lines.push(
+
+                    `• Thấp nhất: ` +
+
+                    `${result.min.label || formatVietnameseMonth(result.min.month)} ` +
+
+                    `(${formatNumber(minValue)} mm)`
+
+                );
+            }
+        }
+
+
+        return lines.join(
+            "\n"
+        );
+    }
 
     // ======================================================
     // ONE MONTH

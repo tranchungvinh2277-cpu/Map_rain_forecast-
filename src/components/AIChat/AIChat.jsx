@@ -26,10 +26,12 @@ import {
 // ==========================================================
 
 import {
+    extractCFSProvince,
+    summarizeCFSProvince,
     queryCFSStation,
     formatCFSAnswer,
+    formatCFSProvinceAnswer
 } from "../../services/cfsQueryEngine";
-
 
 // ==========================================================
 // OBSERVED ENGINE
@@ -163,6 +165,8 @@ function normalizeRainQuestion(question) {
 // "CFS tháng 10"
 //      → CFS
 // ==========================================================
+// DETECT RAIN ENGINE
+// ==========================================================
 
 function detectRainEngine(question) {
 
@@ -171,22 +175,22 @@ function detectRainEngine(question) {
             question
         );
 
+    console.log(
+        "[detectRainEngine] QUESTION:",
+        question
+    );
+
+    console.log(
+        "[detectRainEngine] NORMALIZED:",
+        q
+    );
+
 
     // ======================================================
     // 1. OBSERVED
     // ======================================================
-    //
-    // Các từ chỉ thời gian đã xảy ra
-    // được ưu tiên cao nhất.
-    //
-    // Điều này rất quan trọng đối với các câu như:
-    //
-    // "Trong tháng này 24 giờ qua mưa thế nào?"
-    //
-    // → OBSERVED
-    // ======================================================
 
-    if (
+    const isObserved =
 
         q.includes("qua") ||
 
@@ -198,9 +202,14 @@ function detectRainEngine(question) {
 
         q.includes("thuc do") ||
 
-        q.includes("thuc te")
+        q.includes("thuc te");
 
-    ) {
+
+    if (isObserved) {
+
+        console.log(
+            "[detectRainEngine] RESULT: OBSERVED"
+        );
 
         return "OBSERVED";
 
@@ -208,15 +217,32 @@ function detectRainEngine(question) {
 
 
     // ======================================================
-    // 2. GFS
-    // ======================================================
-    //
-    // GFS chỉ xử lý dự báo ngày / giờ.
-    //
-    // Không dùng "tháng" ở đây.
+    // 2. CFS
     // ======================================================
 
-    if (
+    const isCFS =
+
+        /\bcfs(?:v2)?\b/.test(q) ||
+
+        q.includes("thang");
+
+
+    if (isCFS) {
+
+        console.log(
+            "[detectRainEngine] RESULT: CFS"
+        );
+
+        return "CFS";
+
+    }
+
+
+    // ======================================================
+    // 3. GFS
+    // ======================================================
+
+    const isGFS =
 
         q.includes("gio toi") ||
 
@@ -226,9 +252,14 @@ function detectRainEngine(question) {
 
         q.includes("hom nay") ||
 
-        q.includes("ngay mai")
+        q.includes("ngay mai");
 
-    ) {
+
+    if (isGFS) {
+
+        console.log(
+            "[detectRainEngine] RESULT: GFS"
+        );
 
         return "GFS";
 
@@ -236,40 +267,12 @@ function detectRainEngine(question) {
 
 
     // ======================================================
-    // 3. CFS
-    // ======================================================
-    //
-    // CFS xử lý dự báo theo tháng.
-    //
-    // Có thể gọi trực tiếp:
-    //
-    // "CFS tháng 10"
-    //
-    // hoặc tự nhiên:
-    //
-    // "Dự báo mưa tháng 10"
-    // ======================================================
-
-    if (
-
-        /\bcfs(?:v2)?\b/.test(q) ||
-
-        q.includes("thang")
-
-    ) {
-
-        return "CFS";
-
-    }
-
-
-    // ======================================================
     // 4. DEFAULT
     // ======================================================
-    //
-    // Nếu không xác định được rõ nguồn dữ liệu,
-    // giữ hành vi cũ: chạy GFS.
-    // ======================================================
+
+    console.log(
+        "[detectRainEngine] RESULT: GFS (DEFAULT)"
+    );
 
     return "GFS";
 
@@ -645,11 +648,141 @@ export default function AIChat({
                 );
 
 
-                // ------------------------------------------------
-                // CFS hiện tại hoạt động theo trạm.
-                // ------------------------------------------------
+                // ==================================================
+                // 1. KIỂM TRA CÂU HỎI CÓ PHẢI CFS THEO TỈNH KHÔNG
+                // ==================================================
 
-                if (!selectedMaTram) {
+                const cfsProvince =
+                    extractCFSProvince(
+                        text
+                    );
+
+
+                console.log(
+                    "[AIChat] CFS PROVINCE:",
+                    cfsProvince
+                );
+
+
+                // ==================================================
+                // 2. CFS THEO TỈNH
+                // ==================================================
+
+                if (
+                    cfsProvince
+                ) {
+
+                    console.log(
+                        "[AIChat] Routing to CFS PROVINCE engine"
+                    );
+
+                    const result =
+                        await summarizeCFSProvince(
+                            cfsProvince
+                        );
+
+                    console.log(
+                        "CFS PROVINCE QUERY RESULT:",
+                        result
+                    );
+
+                    console.log(
+                        "CFS PROVINCE QUERY RESULT JSON:",
+                        JSON.stringify(
+                            result,
+                            null,
+                            2
+                        )
+                    );
+
+                    const answer =
+                        formatCFSProvinceAnswer(
+                            result
+                        );
+
+                    console.log(
+                        "CFS PROVINCE ANSWER:",
+                        answer
+                    );
+
+                    const assistantMessage = {
+                        id:
+                            generateId(),
+
+                        role:
+                            "assistant",
+
+                        content:
+                            answer,
+
+                        dataSource:
+                            "CFS",
+
+                        cfsResult:
+                            result,
+                    };
+
+                    setMessages(
+                        prev => [
+                            ...prev,
+                            assistantMessage,
+                        ]
+                    );
+
+                    logAiQuery({
+                        question:
+                            text,
+
+                        answer:
+                            answer,
+
+                        messageId:
+                            assistantMessage.id,
+
+                        intent:
+                            result?.intent ||
+                            "CFS_PROVINCE",
+
+                        dataSource:
+                            "CFS",
+
+                        selectedProvince:
+                            cfsProvince,
+
+                        selectedStation:
+                            null,
+
+                        mapContext:
+                            mapContext,
+
+                        result:
+                            result,
+
+                        cfsResult:
+                            result,
+
+                        success:
+                            result?.success !== false,
+
+                        errorMessage:
+                            result?.success === false
+                                ? result?.error ||
+                                  result?.message ||
+                                  null
+                                : null,
+                    });
+
+                    return;
+                }
+
+
+                // ==================================================
+                // 3. CFS THEO TRẠM
+                // ==================================================
+
+                if (
+                    !selectedMaTram
+                ) {
 
                     const answer =
                         "Bạn hãy chọn một trạm trên bản đồ " +
@@ -736,9 +869,14 @@ export default function AIChat({
                 }
 
 
-                // ------------------------------------------------
-                // QUERY CFS
-                // ------------------------------------------------
+                // ==================================================
+                // 4. QUERY CFS THEO TRẠM
+                // ==================================================
+
+                console.log(
+                    "[AIChat] Routing to CFS STATION engine"
+                );
+
 
                 const result =
                     await queryCFSStation(
