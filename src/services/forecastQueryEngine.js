@@ -342,7 +342,7 @@ function extractProvince(question, mapContext = {}) {
                 "thua thien hue",
                 "hue"
             ],
-            province: "Thừa Thiên Huế"
+            province: "Huế"
         },
         { aliases: ["tien giang"], province: "Tiền Giang" },
         { aliases: ["tra vinh"], province: "Trà Vinh" },
