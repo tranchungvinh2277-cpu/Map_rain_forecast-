@@ -73,10 +73,10 @@ const INITIAL_MESSAGE = {
     role: "assistant",
 
     content:
-        "Xin chào! Tôi là trợ lý AI về mưa. " +
-        "Bạn có thể hỏi về mưa thực đo, " +
-        "mưa dự báo GFS theo ngày/giờ, " +
-        "hoặc dự báo CFS theo tháng.",
+        "Xin chào! Tôi là trợ lý về mưa. " +
+        "Tôi có thể trả lời câu hỏi về mưa thực đo 24,72h qua, " +
+        "mưa dự báo GFS trong 24, 72h tới, " +
+        "hoặc dự báo CFS trong 6 tháng tiếp theo.",
 
 };
 
