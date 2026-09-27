@@ -725,48 +725,42 @@ export function getStationCFSMonthlySeries(
 // 9. FIND STATION BY CODE
 // ==========================================================
 
-export async function findCFSStation(
-    stationCode
-) {
+export async function findCFSStation(stationCode) {
 
     if (
         stationCode === null ||
         stationCode === undefined ||
         stationCode === ""
     ) {
-
         return null;
     }
-
 
     const data =
         await loadCFSData();
 
-
     const target =
         normalizeText(
-            stationCode
+            String(stationCode)
+                .replace(/^0+/, "")
         );
-
 
     const station =
         data.find(
             item =>
                 normalizeText(
-                    item?.MaTram
+                    String(item?.MaTram ?? "")
+                        .replace(/^0+/, "")
                 ) === target
         );
-
 
     console.log(
         "[CFS] FIND STATION:",
         stationCode,
         "=>",
         station
-            ? station.TenTram
+            ? station.MaTram
             : "NOT FOUND"
     );
-
 
     return station || null;
 }
@@ -1588,7 +1582,28 @@ function haversineDistanceKm(
     return R * c;
 }
 
+// ==========================================================
+// CFS STATION CODE NORMALIZATION
+// ----------------------------------------------------------
+// CFS có thể lưu:
+//   WebGIS / OBSERVED : "48820"
+//   CFS                : "048820"
+//
+// Chỉ dùng cho đối chiếu CFS.
+// Không thay đổi MaTram gốc trong JSON.
+// ==========================================================
 
+function normalizeCFSStationCode(value) {
+
+    return normalizeText(
+        String(
+            value ?? ""
+        ).replace(
+            /^0+/,
+            ""
+        )
+    );
+}
 // ==========================================================
 // 18. GET CFS STATIONS WITHIN RADIUS
 // ==========================================================
@@ -1605,14 +1620,13 @@ export async function getCFSStationsWithinRadius(
     const center =
         stations.find(
             station =>
-                normalizeText(
+                normalizeCFSStationCode(
                     station?.MaTram
                 ) ===
-                normalizeText(
+                normalizeCFSStationCode(
                     stationCode
                 )
         );
-
 
     if (!center) {
 
